@@ -15,7 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -28,9 +29,22 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
+      - name: Deploy to docs/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # Prepare docs/ from dist/
+          rm -rf docs || true
+          mkdir -p docs
+          cp -r dist/* docs/
+
+          # Commit back to main so GitHub Pages can serve from main/docs
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git commit -m "chore: deploy to docs from CI [skip ci]"; then
+            git push origin HEAD:main
+          else
+            echo "No changes to commit"
+          fi
