@@ -1,5 +1,9 @@
-<script setup lang="ts">
-defineOptions({ name: 'IndexPage' })
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'IndexPage',
+})
 </script>
 
 <template>
