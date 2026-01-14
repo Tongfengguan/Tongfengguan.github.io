@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+defineOptions({ name: 'IndexPage' })
+</script>
 
 <template>
   <main class="container">
