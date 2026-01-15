@@ -20,7 +20,7 @@ export default defineComponent({
 
     const socials = [
       { name: 'GitHub', url: 'https://github.com/tongfengguan' },
-      { name: 'Email', url: 'mailto:1316187067@qq.com' },
+      { name: 'Email', url: 'mailto:' },
     ]
 
     // 2. 打字机逻辑
@@ -28,7 +28,8 @@ export default defineComponent({
       '算法蒟蒻梦想成为ACMer',
       'Keep Coding, Keep Improving',
       'While(true) { Study(); }',
-      '追求极致的算法效率',
+      'XCPC暴零选手',
+      '铁牌收藏家',
     ]
     const displayedBio = ref('')
     const timer = ref<number | null>(null)
@@ -77,7 +78,7 @@ export default defineComponent({
     <hr class="divider" />
 
     <section class="section">
-      <h2>🚀 我的项目</h2>
+      <h2>🚀 我的期末作业</h2>
       <div class="grid">
         <a v-for="item in projects" :key="item.title" :href="item.url" class="card">
           <h3>{{ item.title }}</h3>
