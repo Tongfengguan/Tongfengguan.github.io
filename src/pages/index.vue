@@ -1,10 +1,10 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref, onMounted } from 'vue'
 
 export default defineComponent({
   name: 'IndexPage',
   setup() {
-    // 将链接数据化，方便以后维护
+    // 1. 链接数据
     const projects = [
       {
         title: '个人计划表',
@@ -20,10 +20,46 @@ export default defineComponent({
 
     const socials = [
       { name: 'GitHub', url: 'https://github.com/tongfengguan' },
-      { name: 'Email', url: 'mailto:your-email@example.com' },
+      { name: 'Email', url: 'mailto:1316187067@qq.com' },
     ]
 
-    return { projects, socials }
+    // 2. 打字机逻辑
+    const bios = [
+      '算法蒟蒻梦想成为ACMer',
+      'Keep Coding, Keep Improving',
+      'While(true) { Study(); }',
+      '追求极致的算法效率',
+    ]
+    const displayedBio = ref('')
+    const timer = ref<number | null>(null)
+
+    const typeWriter = (text: string) => {
+      if (timer.value) clearTimeout(timer.value)
+
+      displayedBio.value = ''
+      let index = 0
+
+      const type = () => {
+        if (index < text.length) {
+          displayedBio.value += text.charAt(index)
+          index++
+          timer.value = window.setTimeout(type, 120) // 控制打字速度
+        }
+      }
+      type()
+    }
+
+    const changeBio = () => {
+      const filtered = bios.filter((b) => b !== displayedBio.value)
+      const nextBio = filtered[Math.floor(Math.random() * filtered.length)] ?? bios[0]
+      typeWriter(nextBio as string)
+    }
+
+    onMounted(() => {
+      typeWriter(bios[0] as string)
+    })
+
+    return { projects, socials, displayedBio, changeBio }
   },
 })
 </script>
@@ -31,11 +67,11 @@ export default defineComponent({
 <template>
   <main class="container">
     <header class="profile">
-      <div class="avatar-container">
-        <img src="./assets/avatar.png" alt="Profile Avatar" class="avatar-img" />
+      <div class="avatar-container" @click="changeBio" title="点我切换心情">
+        <img src="../../static/avatar.png" alt="Profile Avatar" class="avatar-img" />
       </div>
       <h1>TFGKK</h1>
-      <p class="bio">专注 AI 算法与前端开发</p>
+      <p class="bio">{{ displayedBio }}<span class="cursor">|</span></p>
     </header>
 
     <hr class="divider" />
@@ -81,21 +117,8 @@ export default defineComponent({
   text-align: center;
   margin-bottom: 2rem;
 }
-.avatar {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: bold;
-  margin: 0 auto 1rem;
-}
 
-/* 头像容器：控制大小和形状 */
+/* 头像容器：增加了鼠标手型和缩放动画 */
 .avatar-container {
   width: 120px;
   height: 120px;
@@ -104,18 +127,40 @@ export default defineComponent({
   overflow: hidden;
   border: 4px solid #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.avatar-container:hover {
+  transform: scale(1.08);
 }
 
-/* 图片样式：填充容器 */
 .avatar-img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 关键：保持比例裁剪，防止图片拉伸变形 */
+  object-fit: cover;
   display: block;
 }
+
+/* 打字机文本样式 */
 .bio {
   color: #718096;
   font-size: 1.1rem;
+  min-height: 1.6em; /* 防止文字跳动 */
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* 闪烁的光标 */
+.cursor {
+  color: #3b82f6;
+  font-weight: bold;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 /* 分隔线 */
@@ -182,7 +227,6 @@ h2 {
   color: #a0aec0;
 }
 
-/* 移动端适配 */
 @media (max-width: 480px) {
   .container {
     margin: 2rem auto;
