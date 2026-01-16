@@ -160,7 +160,7 @@ export default defineComponent({
     <header class="profile">
       <div class="avatar-container" @click="changeBio" title="点我切换心情">
         <img
-          src="../../static/avatar.png"
+          src="/avatar.png"
           alt="Profile Avatar"
           class="avatar-img"
         />

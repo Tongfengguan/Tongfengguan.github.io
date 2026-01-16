@@ -34,11 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          # Prepare docs/ from dist/
-          rm -rf docs || true
-          mkdir -p docs
-          cp -r dist/* docs/
-
+          # Build outputs directly to docs/ folder
           # Commit back to main so GitHub Pages can serve from main/docs
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
