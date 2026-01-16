@@ -199,7 +199,7 @@ export default defineComponent({
     <hr class="divider" />
 
     <section class="section">
-      <h2>🚀 我的期末作业</h2>
+      <h2>🚀 一些奇奇怪怪的东西喵</h2>
       <div class="grid">
         <a v-for="item in projects" :key="item.title" :href="item.url" class="card" target="_blank">
           <h3>{{ item.title }}</h3>

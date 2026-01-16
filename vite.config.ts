@@ -20,5 +20,10 @@ export default defineConfig({
   build: {
     outDir: 'docs',
     assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
 })
