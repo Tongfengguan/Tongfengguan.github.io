@@ -10,7 +10,6 @@
     "env.d.ts"
   ],
   "exclude": [
-    "node_modules",
     "dist",
     "docs"
   ],
@@ -23,6 +22,8 @@
     },
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowJs": true,
+    "preserveSymlinks": false,
     "target": "ES2020",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": [
@@ -39,6 +40,7 @@
     "noEmit": true,
     "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "allowImportingTsExtensions": false
   }
 }
