@@ -24,8 +24,9 @@ dist-ssr
 *.sw?
 
 # Build output
-docs/assets
-!docs/assets/.gitkeep
+# Note: docs/assets is needed for GitHub Pages deployment
+# docs/assets
+# !docs/assets/.gitkeep
 
 # TypeScript
 *.tsbuildinfo
