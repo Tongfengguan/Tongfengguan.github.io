@@ -56,6 +56,7 @@ const myProjects = [
 // 实时时间
 const currentTime = ref('')
 const currentDate = ref('')
+let timeInterval: number | undefined
 
 // ================= 核心逻辑 =================
 
@@ -98,8 +99,12 @@ const cfLoading = ref(true)
 const fetchCFData = async () => {
   cfLoading.value = true
   try {
-    // 获取 Rating 和 Rank
-    const infoRes = await fetch(`https://codeforces.com/api/user.info?handles=${cfHandle}`)
+    // 并发获取 Rating/Rank 和已解题数
+    const [infoRes, statusRes] = await Promise.all([
+      fetch(`https://codeforces.com/api/user.info?handles=${cfHandle}`),
+      fetch(`https://codeforces.com/api/user.status?handle=${cfHandle}`),
+    ])
+
     const infoData = await infoRes.json()
     if (infoData.status === 'OK') {
       const user = infoData.result[0]
@@ -107,8 +112,6 @@ const fetchCFData = async () => {
       cfRank.value = user.rank ?? 'Unrated'
     }
 
-    // 获取解题数 (需过滤去重)
-    const statusRes = await fetch(`https://codeforces.com/api/user.status?handle=${cfHandle}`)
     const statusData = await statusRes.json()
     if (statusData.status === 'OK') {
       const accepted = statusData.result.filter((s: any) => s.verdict === 'OK')
@@ -140,11 +143,11 @@ const getRankColor = (rating: number | string) => {
 const updateTime = () => {
   const now = new Date()
   currentTime.value = now.toLocaleTimeString('zh-CN', { hour12: false })
-  currentDate.value = now.toLocaleDateString('zh-CN', { 
-    year: 'numeric', 
-    month: 'long', 
+  currentDate.value = now.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
     day: 'numeric',
-    weekday: 'long'
+    weekday: 'long',
   })
 }
 
@@ -156,7 +159,7 @@ const particles = ref<Array<{ x: number; y: number; size: number; opacity: numbe
 const handleMouseMove = (e: MouseEvent) => {
   mouseX.value = e.clientX
   mouseY.value = e.clientY
-  
+
   // 添加粒子
   if (particles.value.length < 20) {
     particles.value.push({
@@ -178,11 +181,13 @@ const handleMouseMove = (e: MouseEvent) => {
 
 // 粒子动画
 const animateParticles = () => {
-  particles.value = particles.value.map((p: { x: number; y: number; size: number; opacity: number }) => ({
-    ...p,
-    opacity: Math.max(0, p.opacity - 0.02),
-    y: p.y - 1,
-  })).filter((p: { x: number; y: number; size: number; opacity: number }) => p.opacity > 0)
+  particles.value = particles.value
+    .map((p: { x: number; y: number; size: number; opacity: number }) => ({
+      ...p,
+      opacity: Math.max(0, p.opacity - 0.02),
+      y: p.y - 1,
+    }))
+    .filter((p: { x: number; y: number; size: number; opacity: number }) => p.opacity > 0)
   requestAnimationFrame(animateParticles)
 }
 
@@ -190,8 +195,8 @@ onMounted(() => {
   typeWriter(bios[0] as string)
   fetchCFData()
   updateTime()
-  setInterval(updateTime, 1000)
-  
+  timeInterval = window.setInterval(updateTime, 1000)
+
   // 鼠标跟随
   window.addEventListener('mousemove', handleMouseMove)
   animateParticles()
@@ -199,6 +204,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove)
+  if (timeInterval) clearInterval(timeInterval)
 })
 </script>
 
@@ -206,7 +212,7 @@ onUnmounted(() => {
   <main class="container" :class="{ 'dark-theme': isDark }">
     <!-- 动态网格背景 -->
     <div class="grid-background"></div>
-    
+
     <!-- 鼠标跟随粒子 -->
     <div class="particles-container">
       <div
@@ -222,13 +228,13 @@ onUnmounted(() => {
         }"
       ></div>
     </div>
-    
+
     <!-- 实时时间显示 -->
     <div class="time-display">
       <div class="time-value">{{ currentTime }}</div>
       <div class="date-value">{{ currentDate }}</div>
     </div>
-    
+
     <div class="theme-toggle" @click="toggleDark" :title="isDark ? '浅色' : '深色'">
       <svg
         v-if="isDark"
@@ -260,33 +266,35 @@ onUnmounted(() => {
       </svg>
     </div>
 
-    <header class="profile">
-      <div class="avatar-container" @click="changeBio" title="点我切换心情">
-        <img src="/avatar.png" alt="Profile Avatar" class="avatar-img" />
-        <div class="avatar-glow"></div>
-      </div>
-      <h1>TFGKK</h1>
-      <div class="bio-container">
-        <span class="bio-prompt">$</span>
-        <p class="bio">{{ displayedBio }}<span class="cursor">|</span></p>
-      </div>
+    <el-card class="profile-card" shadow="hover">
+      <div class="profile" style="margin: 0; padding: 0; text-align: center">
+        <div class="avatar-container" @click="changeBio" title="点我切换心情">
+          <img src="/avatar.png" alt="Profile Avatar" class="avatar-img" />
+          <div class="avatar-glow"></div>
+        </div>
+        <h1>TFGKK</h1>
+        <div class="bio-container">
+          <span class="bio-prompt">$</span>
+          <p class="bio">{{ displayedBio }}<span class="cursor">|</span></p>
+        </div>
 
-      <div class="cf-stats" v-if="!cfLoading">
-        <div class="cf-badge">
-          <span class="label">Rating</span>
-          <span :class="['value', getRankColor(cfRating)]">{{ cfRating }}</span>
+        <div class="cf-stats" v-if="!cfLoading">
+          <div class="cf-badge">
+            <span class="label">Rating</span>
+            <span :class="['value', getRankColor(cfRating)]">{{ cfRating }}</span>
+          </div>
+          <div class="cf-badge">
+            <span class="label">Solved</span>
+            <span class="value">{{ cfSolved }}</span>
+          </div>
+          <div class="cf-badge">
+            <span class="label">Rank</span>
+            <span :class="['value', getRankColor(cfRating)]">{{ cfRank }}</span>
+          </div>
         </div>
-        <div class="cf-badge">
-          <span class="label">Solved</span>
-          <span class="value">{{ cfSolved }}</span>
-        </div>
-        <div class="cf-badge">
-          <span class="label">Rank</span>
-          <span :class="['value', getRankColor(cfRating)]">{{ cfRank }}</span>
-        </div>
+        <div v-else class="cf-loading">API Loading...</div>
       </div>
-      <div v-else class="cf-loading">API Loading...</div>
-    </header>
+    </el-card>
 
     <hr class="divider" />
 
@@ -300,12 +308,34 @@ onUnmounted(() => {
 
     <footer class="footer">
       <div class="social-links">
-        <a v-for="social in socials" :key="social.name" :href="social.url" target="_blank" class="social-link">
-          <svg v-if="social.icon === 'github'" class="social-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        <a
+          v-for="social in socials"
+          :key="social.name"
+          :href="social.url"
+          target="_blank"
+          class="social-link"
+        >
+          <svg
+            v-if="social.icon === 'github'"
+            class="social-icon"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+            />
           </svg>
-          <svg v-else-if="social.icon === 'email'" class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <svg
+            v-else-if="social.icon === 'email'"
+            class="social-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+            ></path>
             <polyline points="22,6 12,13 2,6"></polyline>
           </svg>
           <span class="social-text">{{ social.name }}</span>
@@ -346,7 +376,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
+  background-image:
     linear-gradient(rgba(63, 114, 175, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(63, 114, 175, 0.05) 1px, transparent 1px);
   background-size: 50px 50px;
@@ -356,7 +386,7 @@ onUnmounted(() => {
 }
 
 .container.dark-theme .grid-background {
-  background-image: 
+  background-image:
     linear-gradient(rgba(219, 226, 239, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(219, 226, 239, 0.1) 1px, transparent 1px);
 }
@@ -435,7 +465,8 @@ onUnmounted(() => {
 }
 
 @keyframes time-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -529,9 +560,13 @@ onUnmounted(() => {
   border-radius: 50%;
   padding: 4px;
   background: linear-gradient(135deg, var(--accent), #112d4e, #3f72af);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   mask-composite: exclude;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -563,7 +598,8 @@ onUnmounted(() => {
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.5;
   }
@@ -744,7 +780,7 @@ onUnmounted(() => {
     align-items: center;
     gap: 1rem;
   }
-  
+
   .social-link {
     width: 100%;
     max-width: 200px;
@@ -756,16 +792,16 @@ onUnmounted(() => {
   .container {
     padding: 2rem 1rem;
   }
-  
+
   .profile h1 {
     font-size: 2rem;
   }
-  
+
   .avatar-container {
     width: 120px;
     height: 120px;
   }
-  
+
   .cf-stats {
     gap: 0.8rem;
     font-size: 0.7rem;
@@ -773,24 +809,24 @@ onUnmounted(() => {
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .theme-toggle {
     top: 1rem;
     right: 1rem;
     width: 2.25rem;
     height: 2.25rem;
   }
-  
+
   .time-display {
     top: 1rem;
     left: 1rem;
     padding: 0.75rem 1rem;
   }
-  
+
   .time-value {
     font-size: 1.25rem;
   }
-  
+
   .date-value {
     font-size: 0.75rem;
   }
