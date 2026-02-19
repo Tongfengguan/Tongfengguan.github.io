@@ -37,11 +37,16 @@ const bios = [
 const myProjects = [
   {
     title: '学校学科竞赛报名管理系统',
-    desc: '基于 Spring Boot + Vue 3 的前后端分离学科竞赛管理平台',
-    tech: ['Spring Boot', 'Vue 3', 'MySQL', 'JPA'],
-    features: ['角色权限管理 (RBAC)', '安全报名机制', '竞赛全生命周期管理', '名单实时管理'],
+    desc: '基于 Spring Boot 3 + Vue 3 的现代化全栈竞赛管理平台，实现了从数据批量运维、竞赛发布到学生安全报名的完整闭环。',
+    tech: ['Spring Boot 3', 'Vue 3', 'MySQL 8', 'Alibaba EasyExcel', 'Pinia', 'Axios'],
+    features: [
+      '自动化数据维护 (万级数据秒级导入)',
+      '多重安全机制 (防代报、防重报拦截)',
+      '角色权限管理与独立账号体系',
+      '鲁棒性网络层 (拦截器、Blob流下载)'
+    ],
     icon: 'trophy',
-    github: 'https://github.com/tongfengguan/SchoolCompetitionWeb',
+    github: 'https://github.com/tongfengguan/SchoolCompetitionWeb'
   },
   {
     title: '校园失物招领系统',
