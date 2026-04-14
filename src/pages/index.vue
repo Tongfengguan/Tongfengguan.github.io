@@ -36,6 +36,19 @@ const bios = [
 // 项目展示
 const myProjects = [
   {
+    title: '智慧三农平台 (FarmerPlatform)',
+    desc: '全栈式“智慧三农”管理与服务平台，为农户和消费者提供政策资讯、农资购买及业务管理的一站式解决方案。',
+    tech: ['Java 21', 'Spring Boot', 'Vue 3', 'DeepSeek-V3 API', 'LangChain', 'MySQL'],
+    features: [
+      'AI 智能数据助手 (基于 DeepSeek-V3 实时业务分析)',
+      '全栈现代化架构 (AI 服务与业务后端解耦设计)',
+      '响应式三农主题 (支持暗黑模式与平滑交互)',
+      '高性能后端接口 (全量分页与 SQL 聚合优化)'
+    ],
+    icon: 'trophy',
+    github: 'https://github.com/tongfengguan/FarmerPlatform'
+  },
+  {
     title: '学校学科竞赛报名管理系统',
     desc: '基于 Spring Boot 3 + Vue 3 的现代化全栈竞赛管理平台，实现了从数据批量运维、竞赛发布到学生安全报名的完整闭环。',
     tech: ['Spring Boot 3', 'Vue 3', 'MySQL 8', 'Alibaba EasyExcel', 'Pinia', 'Axios'],
