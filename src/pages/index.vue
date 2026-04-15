@@ -109,13 +109,19 @@ const handleWheel = (e: WheelEvent) => {
 
 // 修复 2: 增加移动端滑动支持
 let touchStartY = 0
-const handleTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY }
+const handleTouchStart = (e: TouchEvent) => { 
+  if (e.touches && e.touches[0]) {
+    touchStartY = e.touches[0].clientY 
+  }
+}
 const handleTouchEnd = (e: TouchEvent) => {
   if (isAnimating.value) return
-  const touchEndY = e.changedTouches[0].clientY
-  const deltaY = touchStartY - touchEndY
-  if (deltaY > 50) goToSection(currentIndex.value + 1)
-  else if (deltaY < -50) goToSection(currentIndex.value - 1)
+  if (e.changedTouches && e.changedTouches[0]) {
+    const touchEndY = e.changedTouches[0].clientY
+    const deltaY = touchStartY - touchEndY
+    if (deltaY > 50) goToSection(currentIndex.value + 1)
+    else if (deltaY < -50) goToSection(currentIndex.value - 1)
+  }
 }
 
 // 修复 3: 布局自适应更新，增加窗口尺寸监听
