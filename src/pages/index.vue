@@ -3,18 +3,32 @@ import { ref, onMounted, onUnmounted, computed, CSSProperties } from 'vue'
 import HeroSection from '../components/HeroSection.vue'
 import ProjectSection from '../components/ProjectSection.vue'
 import LinksSection from '../components/LinksSection.vue'
+import BackgroundSystem from '../components/BackgroundSystem.vue'
 
 // ================= 配置区 =================
 const cfHandle = 'tfgkk'
 const bios = ['算法蒟蒻梦想成为ACMer', 'Keep Coding, Keep Improving', 'While(true) { Study(); }', 'XCPC暴零选手', '铁牌收藏家']
-const projects = [
-  { title: '个人计划表', desc: '学习进度与长期目标管理', url: 'https://tongfengguan.github.io/Studyplan/', icon: 'calendar' },
-  { title: 'Codeforces', desc: 'Codeforces 直达', url: 'https://codeforces.com/', icon: 'codeforces' }
+
+const defaultBookmarks = [
+  {
+    category: '动物好伙伴',
+    links: [
+      { title: 'Google Gemini', desc: 'Google 的多模态 AI 模型', url: 'https://gemini.google.com/' },
+      { title: 'ChatGPT', desc: 'OpenAI 的智能对话工具', url: 'https://chat.openai.com/' },
+      { title: 'Grok', desc: 'xAI 打造的实时联网 AI', url: 'https://grok.com/' }
+    ]
+  },
+  {
+    category: '刷题喵',
+    links: [
+      { title: 'Codeforces', desc: '全球顶尖算法竞赛平台', url: 'https://codeforces.com/' },
+      { title: 'AtCoder', desc: '高质量日系算法周赛', url: 'https://atcoder.jp/' },
+      { title: '牛客竞赛OJ', desc: '国内领先的算法竞赛平台', url: 'https://ac.nowcoder.com/' }
+    ]
+  }
 ]
-const socials = [
-  { name: 'GitHub', url: 'https://github.com/tongfengguan', icon: 'github' },
-  { name: 'Email', url: 'mailto:1316187067@qq.com', icon: 'email' }
-]
+
+const bookmarks = ref(defaultBookmarks)
 
 const myProjects = [
   {
@@ -40,18 +54,21 @@ const myProjects = [
   }
 ]
 
+const socials = [
+  { name: 'GitHub', url: 'https://github.com/tongfengguan', icon: 'github' },
+  { name: 'Email', url: 'mailto:1316187067@qq.com', icon: 'email' }
+]
+
 // ================= 核心逻辑 =================
 
-const isDark = ref(false)
+const isDark = ref(true)
 const toggleDark = () => { isDark.value = !isDark.value }
 
-// 修复 1: 打字机效果增加定时器管理，解决点击过快乱码
 const displayedBio = ref('')
 let currentTimer: any = null
 const typeWriter = (text: string) => {
   if (currentTimer) clearTimeout(currentTimer)
-  let index = 0
-  displayedBio.value = ''
+  let index = 0; displayedBio.value = ''
   const type = () => {
     if (index < text.length) {
       displayedBio.value += text.charAt(index)
@@ -67,7 +84,6 @@ const changeBio = () => {
   if (next) typeWriter(next)
 }
 
-// Codeforces 数据获取
 const cfRating = ref('--'), cfSolved = ref('--'), cfRank = ref('Unrated'), cfLoading = ref(true)
 const fetchCFData = async () => {
   try {
@@ -82,14 +98,9 @@ const fetchCFData = async () => {
     if (status.status === 'OK') {
       cfSolved.value = new Set(status.result.filter((s: any) => s.verdict === 'OK').map((s: any) => `${s.problem.contestId}${s.problem.index}`)).size.toString()
     }
-  } catch (e) {
-    console.error(e)
-  } finally {
-    cfLoading.value = false
-  }
+  } catch (e) { console.error(e) } finally { cfLoading.value = false }
 }
 
-// 页面滚动逻辑
 const currentIndex = ref(0)
 const totalSections = myProjects.length + 2
 const isAnimating = ref(false)
@@ -107,24 +118,20 @@ const handleWheel = (e: WheelEvent) => {
   else if (e.deltaY < -20) goToSection(currentIndex.value - 1)
 }
 
-// 修复 2: 增加移动端滑动支持
 let touchStartY = 0
-const handleTouchStart = (e: TouchEvent) => { 
-  if (e.touches && e.touches[0]) {
-    touchStartY = e.touches[0].clientY 
-  }
-}
+const handleTouchStart = (e: TouchEvent) => { if (e.touches[0]) touchStartY = e.touches[0].clientY }
 const handleTouchEnd = (e: TouchEvent) => {
   if (isAnimating.value) return
-  if (e.changedTouches && e.changedTouches[0]) {
-    const touchEndY = e.changedTouches[0].clientY
-    const deltaY = touchStartY - touchEndY
-    if (deltaY > 50) goToSection(currentIndex.value + 1)
-    else if (deltaY < -50) goToSection(currentIndex.value - 1)
+  const touchEnd = e.changedTouches?.[0]
+  if (!touchEnd) return
+  const touchEndY = touchEnd.clientY
+  const deltaY = touchStartY - touchEndY
+  if (Math.abs(deltaY) > 50) {
+    if (deltaY > 0) goToSection(currentIndex.value + 1)
+    else goToSection(currentIndex.value - 1)
   }
 }
 
-// 修复 3: 布局自适应更新，增加窗口尺寸监听
 const windowWidth = ref(window.innerWidth)
 const windowHeight = ref(window.innerHeight)
 const updateDimensions = () => {
@@ -165,24 +172,25 @@ onUnmounted(() => {
 
 <template>
   <main class="page-viewport" :class="{ 'dark-theme': isDark }">
-    <!-- 背景系统 -->
-    <div class="bg-system">
-      <div class="grid-dot"></div>
-      <div class="glow g1"></div>
-      <div class="glow g2"></div>
-    </div>
+    <BackgroundSystem :currentIndex="currentIndex" />
     
     <!-- 主题切换 -->
-    <div class="theme-btn" @click="toggleDark">
-      <div class="btn-inner" :class="{ 'is-dark': isDark }">
-        <svg v-if="!isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
-        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    <button class="theme-btn" aria-label="Toggle dark mode" @click="toggleDark">
+      <div class="btn-inner">
+        <svg v-if="!isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 22L22 2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+        </svg>
+        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          <path d="M19 3v4M17 5h4"></path>
+        </svg>
       </div>
-    </div>
+    </button>
 
     <!-- 头像 -->
     <div class="avatar-fixed-box" :style="avatarStyle">
-      <div class="avatar-ring" @click="changeBio">
+      <div class="avatar-ring" role="button" aria-label="Change bio text" tabindex="0" @click="changeBio" @keydown.enter="changeBio">
         <img src="/avatar.png" alt="Avatar" />
         <div class="ring-glow"></div>
       </div>
@@ -190,82 +198,33 @@ onUnmounted(() => {
 
     <!-- 页面滚动容器 -->
     <div class="page-wrapper" :style="{ transform: `translate3d(0, -${currentIndex * 100}vh, 0)` }">
-      
-      <!-- 第一屏：Hero View -->
-      <HeroSection 
-        :displayedBio="displayedBio"
-        :cfRating="cfRating"
-        :cfSolved="cfSolved"
-        :cfRank="cfRank"
-        :cfLoading="cfLoading"
-        :isVisible="currentIndex === 0"
-        @scroll-down="goToSection(1)"
-      />
-
-      <!-- 项目屏 -->
-      <ProjectSection 
-        v-for="(project, index) in myProjects" 
-        :key="index"
-        :project="project"
-        :index="index"
-        :isVisible="currentIndex === index + 1"
-      />
-
-      <!-- 链接屏 -->
-      <LinksSection 
-        :projects="projects"
-        :socials="socials"
-        :isVisible="currentIndex === totalSections - 1"
-      />
+      <HeroSection :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :isVisible="currentIndex === 0" @scroll-down="goToSection(1)" />
+      <ProjectSection v-for="(project, index) in myProjects" :key="index" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
+      <LinksSection :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
     </div>
 
     <!-- 侧边导航 -->
-    <div class="side-nav">
-      <div 
-        v-for="i in totalSections" 
-        :key="i" 
-        class="nav-dot" 
-        :class="{ 'active': currentIndex === i-1 }" 
-        @click="goToSection(i-1)"
-      ></div>
+    <div class="side-nav" role="navigation" aria-label="Page sections">
+      <div v-for="i in totalSections" :key="i" class="nav-dot" role="button" :aria-label="`Go to section ${i}`" tabindex="0" :class="{ 'active': currentIndex === i-1 }" @click="goToSection(i-1)" @keydown.enter="goToSection(i-1)"></div>
     </div>
   </main>
 </template>
 
 <style scoped>
-.page-viewport {
-  --bg: #f8fafc; --text-main: #0f172a; --text-mute: #475569; --accent: #2563eb;
-  --glass-bg: rgba(255, 255, 255, 0.9); --glass-border: rgba(203, 213, 225, 0.8);
-  height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s;
-}
-.page-viewport.dark-theme {
-  --bg: #030712; --text-main: #f8fafc; --text-mute: #94a3b8; --accent: #38bdf8;
-  --glass-bg: rgba(17, 24, 39, 0.85); --glass-border: rgba(51, 65, 85, 0.8);
-}
-
-.page-wrapper { height: 100vh; width: 100%; transition: transform 0.85s cubic-bezier(0.645, 0.045, 0.355, 1); will-change: transform; }
-
-.bg-system { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-.grid-dot { position: absolute; inset: 0; background-image: radial-gradient(var(--text-mute) 0.5px, transparent 0.5px); background-size: 30px 30px; opacity: 0.12; }
-.glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.25; }
-.g1 { width: 45vw; height: 45vw; background: var(--accent); top: -10%; right: -5%; }
-.g2 { width: 55vw; height: 55vw; background: #6366f1; bottom: -15%; left: -10%; }
-
-.theme-btn { position: fixed; top: 25px; right: 25px; z-index: 1100; width: 46px; height: 46px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(10px); }
-.btn-inner svg { width: 22px; height: 22px; color: var(--accent); }
-
+.page-viewport { --bg: #ffffff; --text-main: #000000; --text-mute: #333333; --accent: #a855f7; --card-bg: #ffffff; --border: #000000; --shadow: #000000; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s; }
+.page-viewport.dark-theme { --bg: #0f0f0f; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #22d3ee; --card-bg: #1a1a1a; --border: #ffffff; --shadow: var(--accent); }
+.page-wrapper { height: 100vh; width: 100%; transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1); will-change: transform; }
+.theme-btn { position: fixed; top: 30px; right: 30px; z-index: 1100; width: 50px; height: 50px; background: var(--accent); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.theme-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--shadow); }
 .avatar-fixed-box { pointer-events: none; }
-.avatar-ring { width: 140px; height: 140px; border-radius: 50%; border: 4px solid var(--glass-bg); overflow: hidden; position: relative; box-shadow: 0 12px 30px rgba(0,0,0,0.15); cursor: pointer; pointer-events: auto; }
+.avatar-ring { width: 140px; height: 140px; border: 4px solid var(--border); box-shadow: 8px 8px 0px var(--shadow); overflow: hidden; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.avatar-ring:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0px var(--shadow); }
 .avatar-ring img { width: 100%; height: 100%; object-fit: cover; }
-.ring-glow { position: absolute; inset: -10px; background: var(--accent); filter: blur(20px); opacity: 0; transition: 0.3s; }
-.avatar-ring:hover .ring-glow { opacity: 0.35; }
-
 .side-nav { position: fixed; right: 35px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 18px; z-index: 100; }
-.nav-dot { width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--accent); cursor: pointer; transition: 0.4s; opacity: 0.5; }
+.nav-dot { position: relative; width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--accent); cursor: pointer; transition: 0.3s ease-out; opacity: 0.5; }
+.nav-dot::after { content: ''; position: absolute; inset: -16px; }
 .nav-dot.active { height: 35px; border-radius: 6px; background: var(--accent); opacity: 1; }
-
-@media (max-width: 900px) { 
-  .avatar-fixed-box { display: none; } 
-  .side-nav { right: 15px; }
-}
+.nav-dot:focus-visible, .theme-btn:focus-visible, .avatar-ring:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+@media (max-width: 900px) { .avatar-fixed-box { display: none; } .side-nav { right: 15px; } }
 </style>

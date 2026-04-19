@@ -1,11 +1,16 @@
 <script lang="ts" setup>
 import ProjectLinks from './ProjectLinks.vue'
 
-interface ProjectItem {
+interface LinkItem {
   title: string
   desc: string
   url: string
-  icon: string
+  icon?: string
+}
+
+interface BookmarkCategory {
+  category: string
+  links: LinkItem[]
 }
 
 interface SocialItem {
@@ -14,7 +19,7 @@ interface SocialItem {
 }
 
 interface Props {
-  projects: ProjectItem[]
+  bookmarks: BookmarkCategory[]
   socials: SocialItem[]
   isVisible: boolean
 }
@@ -25,14 +30,19 @@ defineProps<Props>()
 <template>
   <section class="page-section links-view">
     <div class="links-content-wrapper" :class="{ 'visible': isVisible }">
-      <ProjectLinks :projects="projects" />
+      <!-- 重新包装后的 ProjectLinks 接收分类数据 -->
+      <ProjectLinks :bookmarks="bookmarks" />
+      
       <footer class="footer">
         <div class="socials">
           <a v-for="s in socials" :key="s.name" :href="s.url" target="_blank" class="social-tag">
             {{ s.name }}
           </a>
         </div>
-        <p class="copy">© 2024 TFGKK · Digital Portfolio</p>
+        <div class="copy-box">
+          <p class="copy">© 2024 TFGKK · Digital Portfolio</p>
+          <div class="status-bar">SYSTEM STATUS: OPTIMIZED</div>
+        </div>
       </footer>
     </div>
   </section>
@@ -53,35 +63,59 @@ defineProps<Props>()
   width: 100%; 
   max-width: 1100px; 
   opacity: 0; 
-  transition: 0.8s 0.3s; 
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-.links-content-wrapper.visible { opacity: 1; }
+.links-content-wrapper.visible { opacity: 1; transform: translateY(0); }
 
-.footer { margin-top: 60px; text-align: center; }
-.socials { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+.footer { 
+  margin-top: 60px; 
+  border: 4px solid var(--border);
+  background: var(--card-bg);
+  padding: clamp(20px, 5vw, 40px);
+  box-shadow: 12px 12px 0px var(--shadow);
+  margin-bottom: 20px;
+}
+
+.socials { display: flex; justify-content: flex-start; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
 
 .social-tag { 
-  padding: 8px 18px; 
-  background: var(--glass-bg); 
-  border-radius: 10px; 
+  padding: 10px 20px; 
+  background: var(--accent); 
   text-decoration: none; 
-  color: var(--text-main); 
-  border: 1px solid var(--glass-border); 
-  transition: 0.3s; 
+  color: #000; 
+  border: 3px solid var(--border); 
+  font-weight: 900;
+  box-shadow: 4px 4px 0px var(--border);
+  transition: 0.2s;
   font-size: 0.9rem;
 }
 
 .social-tag:hover { 
-  border-color: var(--accent); 
-  transform: translateY(-3px); 
-  background: var(--glass-bg);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--border);
 }
 
-.copy { color: var(--text-mute); font-size: 0.85rem; }
+.copy-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 3px solid var(--border);
+  padding-top: 20px;
+}
+
+.copy { color: var(--text-main); font-size: 0.9rem; font-weight: 800; text-transform: uppercase; }
+.status-bar { 
+  background: var(--text-main); color: var(--bg); 
+  padding: 2px 10px; font-weight: 900; font-size: 0.7rem;
+}
 
 @media (max-width: 600px) {
-  .links-view { padding: 0 20px; }
-  .footer { margin-top: 40px; }
+  .links-view { padding: 15px; }
+  .footer { padding: 20px; margin-top: 40px; }
+  .copy-box { flex-direction: column; gap: 15px; align-items: flex-start; }
 }
 </style>

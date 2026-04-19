@@ -47,7 +47,7 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
         </div>
       </div>
     </div>
-    <div class="scroll-hint" @click="emit('scroll-down')">
+    <div class="scroll-hint" role="button" aria-label="Scroll down to projects" tabindex="0" @click="emit('scroll-down')" @keydown.enter="emit('scroll-down')">
       <div class="mouse-icon"></div>
       <span>Scroll Down</span>
     </div>
@@ -72,7 +72,8 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
   opacity: 0; 
   transform: translateY(30px); 
   transition: all 0.8s 0.3s; 
-  margin-top: 20vh; /* 使用 vh 优化自适应 */
+  margin-top: clamp(15vh, 20vh, 25vh);
+  padding: 0 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -81,32 +82,38 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
 .hero-text.visible { opacity: 1; transform: translateY(0); }
 
 .name { 
-  font-size: clamp(3rem, 10vw, 5.5rem); /* 自适应字号 */
-  font-weight: 900; 
-  background: linear-gradient(to bottom right, var(--text-main), var(--accent)); 
-  -webkit-background-clip: text; 
-  background-clip: text; 
-  -webkit-text-fill-color: transparent; 
+  font-size: clamp(3rem, 12vw, 8rem); 
+  font-weight: 950; 
+  color: var(--text-main);
+  text-transform: uppercase;
   letter-spacing: -2px; 
+  line-height: 1;
+  margin-bottom: 20px;
+  text-shadow: clamp(4px, 1vw, 6px) clamp(4px, 1vw, 6px) 0px var(--accent);
 }
 
 .typing-box { 
-  font-family: monospace; 
-  font-size: clamp(1rem, 3vw, 1.5rem); 
-  color: var(--text-mute); 
-  margin: 25px 0; 
-  min-height: 1.5em; 
+  font-family: 'Courier New', monospace; 
+  font-size: clamp(1rem, 3.5vw, 1.8rem); 
+  background: var(--text-main);
+  color: var(--bg);
+  padding: 5px 12px;
+  transform: rotate(-1deg);
+  border: 2px solid var(--border);
+  max-width: 90vw;
+  word-break: break-all;
 }
 
 .cf-stats-row { 
   display: flex; 
-  gap: clamp(15px, 4vw, 35px); 
-  margin-top: 35px; 
-  padding: 18px clamp(20px, 5vw, 35px); 
-  background: var(--glass-bg); 
-  border-radius: 24px; 
-  backdrop-filter: blur(15px); 
-  border: 1px solid var(--glass-border); 
+  gap: clamp(10px, 4vw, 20px); 
+  margin-top: clamp(30px, 8vw, 50px); 
+  padding: 15px clamp(20px, 5vw, 40px); 
+  background: var(--card-bg); 
+  border: 3px solid var(--border);
+  box-shadow: 8px 8px 0px var(--shadow);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .stat-item .val { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 800; color: var(--text-main); }
