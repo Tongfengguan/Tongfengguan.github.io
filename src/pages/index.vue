@@ -35,21 +35,30 @@ const myProjects = [
     title: '智慧三农平台', subtitle: 'FarmerPlatform',
     desc: '全栈式“智慧三农”管理与服务平台，为农户和消费者提供政策资讯及业务管理方案。',
     tech: ['Java 21', 'Spring Boot', 'Vue 3', 'DeepSeek-V3'],
-    features: ['AI 智能数据助手', '全栈现代化架构', '响应式三农主题', '高性能后端接口'],
+    features: [
+      'AI 智能数据助手', '全栈现代化架构', '响应式三农主题', 
+      '高性能后端接口', '大数据可视化', '分布式系统设计'
+    ], // 6个
     github: 'https://github.com/tongfengguan/FarmerPlatform'
   },
   {
     title: '学科竞赛报名系统', subtitle: 'Competition Manager',
     desc: '基于 Spring Boot 3 + Vue 3 的现代化全栈竞赛管理平台，实现数据运维与安全报名。',
     tech: ['Spring Boot 3', 'Vue 3', 'MySQL 8', 'EasyExcel'],
-    features: ['自动化数据维护', '多重安全机制', '角色权限管理', '鲁棒性网络层'],
+    features: [
+      '自动化数据维护', '多重安全机制', '角色权限管理', 
+      '鲁棒性网络层', 'Excel 异步导出', '高并发报名队列'
+    ], // 6个
     github: 'https://github.com/tongfengguan/SchoolCompetitionWeb'
   },
   {
     title: '校园失物招领', subtitle: 'Campus Lost & Found',
     desc: '基于 Uni-app (Vue3) + Spring Boot 的前后端分离架构，提升校园物品寻回效率。',
     tech: ['Uni-app', 'Vue 3', 'Spring Boot', 'JWT'],
-    features: ['发布寻物/招领', '物品列表浏览', '申请认领', '管理端审核'],
+    features: [
+      '发布寻物/招领', '物品列表浏览', '申请认领', 
+      '管理端审核', '地图位置标注', '实时消息推送'
+    ], // 6个
     github: 'https://github.com/tongfengguan/Campus-Lost-and-Found-System',
   }
 ]
@@ -198,9 +207,9 @@ onUnmounted(() => {
 
     <!-- 页面滚动容器 -->
     <div class="page-wrapper" :style="{ transform: `translate3d(0, -${currentIndex * 100}vh, 0)` }">
-      <HeroSection :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :isVisible="currentIndex === 0" @scroll-down="goToSection(1)" />
-      <ProjectSection v-for="(project, index) in myProjects" :key="index" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
-      <LinksSection :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
+      <HeroSection class="layout-section" :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :isVisible="currentIndex === 0" @scroll-down="goToSection(1)" />
+      <ProjectSection v-for="(project, index) in myProjects" :key="index" class="layout-section" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
+      <LinksSection class="layout-section" :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
     </div>
 
     <!-- 侧边导航 -->
@@ -213,7 +222,20 @@ onUnmounted(() => {
 <style scoped>
 .page-viewport { --bg: #ffffff; --text-main: #000000; --text-mute: #333333; --accent: #a855f7; --card-bg: #ffffff; --border: #000000; --shadow: #000000; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s; }
 .page-viewport.dark-theme { --bg: #0f0f0f; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #22d3ee; --card-bg: #1a1a1a; --border: #ffffff; --shadow: var(--accent); }
-.page-wrapper { height: 100vh; width: 100%; transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1); will-change: transform; }
+.page-wrapper { 
+  display: flex;
+  flex-direction: column;
+  height: 100vh; 
+  width: 100%; 
+  transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1); 
+  will-change: transform; 
+}
+
+.layout-section {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100vh;
+}
 .theme-btn { position: fixed; top: 30px; right: 30px; z-index: 1100; width: 50px; height: 50px; background: var(--accent); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .theme-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--shadow); }
 .avatar-fixed-box { pointer-events: none; }
