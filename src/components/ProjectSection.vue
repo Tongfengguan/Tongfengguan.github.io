@@ -18,219 +18,234 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const cloudX = ref(0)
-const cloudY = ref(0)
+// 交互状态
+const mouseX = ref(0)
+const mouseY = ref(0)
+const isHovering = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
+const activeSticker = ref<number | null>(null)
 
+// 准星追踪逻辑
 const handleMouseMove = (e: MouseEvent) => {
-  if (!containerRef.value) return
+  if (!containerRef.value || !props.isVisible) return
+  isHovering.value = true
   const rect = containerRef.value.getBoundingClientRect()
-  const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2
-  const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2
-  cloudX.value = x * 10
-  cloudY.value = y * 10
+  mouseX.value = e.clientX - rect.left
+  mouseY.value = e.clientY - rect.top
 }
 
-onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove)
-})
-onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMouseMove)
-})
+const resetInteraction = () => {
+  isHovering.value = false
+}
+
+const toggleSticker = (i: number) => {
+  if (window.innerWidth < 1100) {
+    activeSticker.value = activeSticker.value === i ? null : i
+  }
+}
 </script>
 
 <template>
-  <section class="page-section project-view" ref="containerRef">
-    <div class="project-layout" :class="{ 'visible': isVisible }">
+  <section 
+    class="page-section project-view" 
+    ref="containerRef" 
+    @mousemove="handleMouseMove"
+    @mouseleave="resetInteraction"
+  >
+    <!-- V7 终极看板：机密解构 HUD -->
+    <div 
+      class="hud-v7-board" 
+      :class="{ 'hud-active': isVisible }"
+    >
       
-      <!-- 左侧：项目核心信息 -->
-      <div class="info-side">
-        <div class="project-header">
-          <span class="index-tag">SUBJECT.{{ index + 1 }}</span>
-          <h2 class="title">{{ project.title }}</h2>
-          <span class="subtitle">{{ project.subtitle }}</span>
-        </div>
-        <p class="description">{{ project.desc }}</p>
-        <div class="tech-wrap">
-          <span v-for="t in project.tech" :key="t" class="tech-tag">{{ t }}</span>
-        </div>
-        <a :href="project.github" target="_blank" class="brutal-action">
-          VIEW SOURCE
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-          </svg>
-        </a>
+      <!-- 1. 动态 SVG 组装边框 -->
+      <svg class="hud-border-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+        <path class="border-path" d="M100,0 L20,0 L0,100 L0,580 L20,600 L300,600 M700,600 L980,600 L1000,500 L1000,20 L980,0 L800,0" fill="none" stroke="var(--accent)" stroke-width="2" />
+        <circle cx="20" cy="20" r="3" fill="var(--accent)" class="deco-dot" />
+        <circle cx="980" cy="580" r="3" fill="var(--accent)" class="deco-dot" />
+      </svg>
+
+      <!-- 2. 交互准星层 (仅在 PC 端显示) -->
+      <div 
+        v-if="isHovering" 
+        class="hud-crosshair"
+        :style="{ left: mouseX + 'px', top: mouseY + 'px' }"
+      >
+        <div class="ch-line h"></div>
+        <div class="ch-line v"></div>
+        <div class="ch-label">TRACKING...</div>
       </div>
 
-      <!-- 右侧：词云 (不重叠、无顿挫交互) -->
-      <div class="cloud-side">
-        <div 
-          class="cloud-container"
-          :style="{ transform: `translate3d(${cloudX}px, ${cloudY}px, 0)` }"
-        >
-          <div 
-            v-for="(feature, i) in project.features" 
-            :key="i"
-            class="feature-sticker"
-            :style="{
-              '--delay': `${i * 0.1}s`,
-              '--r-rot': `${(i % 2 === 0 ? -5 : 6) + (i % 3)}deg`,
-              '--r-x': `${(i * 37) % 20 - 10}px`,
-              '--r-y': `${(i * 53) % 20 - 10}px`
-            }"
-          >
-            {{ feature }}
+      <!-- 3. 内容层 -->
+      <div class="hud-content-grid">
+        
+        <!-- 左侧：战术规格 -->
+        <div class="spec-side">
+          <div class="hud-header">
+            <div class="danger-tag">TOP_SECRET</div>
+            <div class="subject-id">ID: 0{{ index + 1 }} // EVA_PROJECT</div>
+            <h2 class="project-title">{{ project.title }}</h2>
+          </div>
+
+          <div class="desc-box">
+            <div class="desc-line"></div>
+            <p>{{ project.desc }}</p>
+          </div>
+
+          <div class="tech-stack-hud">
+            <div v-for="t in project.tech" :key="t" class="tech-item">
+              <span class="tech-icon"></span> {{ t }}
+            </div>
+          </div>
+
+          <a :href="project.github" target="_blank" class="nerv-action">
+            <div class="action-bg"></div>
+            <span class="action-text">ACCESS SOURCE CODE</span>
+          </a>
+        </div>
+
+        <!-- 右侧：解构贴纸云 -->
+        <div class="feature-side">
+          <div class="feature-grid">
+            <div 
+              v-for="(feature, i) in project.features" 
+              :key="i"
+              class="sticker-v7"
+              :class="{ 'mobile-active': activeSticker === i }"
+              @click="toggleSticker(i)"
+              :style="{ '--delay': (0.5 + i * 0.1) + 's' }"
+            >
+              <div class="sticker-inner">
+                <span class="sticker-num">0{{ i + 1 }}</span>
+                {{ feature }}
+              </div>
+              <div class="sticker-border"></div>
+            </div>
           </div>
         </div>
+
       </div>
 
+      <!-- 装饰用底部读数 -->
+      <div class="hud-footer-info">
+        <span>EST_TIME: 2024-04-23</span>
+        <span class="blink">TERMINAL_ACTIVE</span>
+        <span>LOCATION: NERV_HQ_CENTRAL_DOGMA</span>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&display=swap');
+
 .project-view {
   height: 100vh; width: 100%;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; padding: 40px; box-sizing: border-box;
+  background: transparent;
+  font-family: 'Share Tech Mono', monospace;
 }
 
-.project-layout {
-  display: grid;
-  grid-template-columns: minmax(300px, 400px) 1fr;
-  gap: clamp(40px, 8vw, 120px);
-  width: 100%; max-width: 1400px;
-  max-height: 85vh;
-  opacity: 0; transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.project-layout.visible { opacity: 1; transform: translateY(0); }
-
-.info-side { display: flex; flex-direction: column; gap: 20px; justify-content: center; z-index: 10; }
-
-.index-tag { 
-  display: inline-block; background: var(--accent); color: #000;
-  padding: 4px 12px; font-weight: 950; font-size: 0.9rem;
-  border: 2px solid var(--border); box-shadow: 3px 3px 0px var(--border);
-  width: fit-content;
-}
-
-.title { 
-  font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 950; line-height: 1;
-  text-transform: uppercase; margin: 0; color: var(--text-main);
-  text-shadow: 3px 3px 0px var(--accent);
-}
-
-.subtitle { font-size: 0.9rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-.description { font-size: 1.05rem; line-height: 1.5; color: var(--text-main); font-weight: 600; }
-
-.tech-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-.tech-tag { 
-  font-size: 0.75rem; font-weight: 900; padding: 3px 10px;
-  background: var(--card-bg); border: 2px solid var(--accent);
-  color: var(--text-main); box-shadow: 2px 2px 0px var(--accent);
-}
-
-.brutal-action {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--text-main); color: var(--bg);
-  padding: 12px 25px; font-weight: 900; text-decoration: none;
-  border: 3px solid var(--border); box-shadow: 5px 5px 0px var(--accent);
-  width: fit-content; transition: 0.2s; margin-top: 10px; font-size: 0.9rem;
-}
-.brutal-action:hover { transform: translate(-3px, -3px); box-shadow: 8px 8px 0px var(--accent); }
-
-.cloud-side {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 100%;
-}
-
-.cloud-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: center;
-  gap: clamp(20px, 4vw, 45px);
-  width: 100%;
-  max-width: 900px;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.feature-sticker {
+.hud-v7-board {
   position: relative;
-  background: var(--card-bg);
-  border: 3px solid var(--border);
-  padding: 15px 30px;
-  font-size: clamp(0.9rem, 1.2vw, 1.4rem);
-  font-weight: 900;
-  color: var(--text-main);
-  box-shadow: 8px 8px 0px var(--shadow);
-  white-space: nowrap;
-  cursor: default;
-  user-select: none;
-  
-  transform: translate3d(var(--r-x), var(--r-y), 0) rotate(var(--r-rot));
-  
-  /* 仅保留简单的、不影响全局的过渡 */
-  transition: 
-    background 0.3s, 
-    color 0.3s, 
-    box-shadow 0.3s, 
-    transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    
-  will-change: transform;
-  z-index: 1;
+  width: 100%; max-width: 1300px;
+  height: 80vh; max-height: 700px;
+  background: rgba(var(--bg), 0.7);
+  backdrop-filter: blur(10px);
+  opacity: 0; transform: translateY(40px) scale(0.98);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  padding: 50px; box-sizing: border-box;
+}
+.hud-active { opacity: 1; transform: translateY(0) scale(1); }
+
+/* SVG 边框动画 */
+.hud-border-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+.border-path {
+  stroke-dasharray: 2000; stroke-dashoffset: 2000;
+  transition: stroke-dashoffset 2s 0.3s ease;
+}
+.hud-active .border-path { stroke-dashoffset: 0; }
+
+.deco-dot { opacity: 0; transition: 0.5s 1.5s; }
+.hud-active .deco-dot { opacity: 1; }
+
+/* 交互准星 */
+.hud-crosshair {
+  position: absolute; width: 60px; height: 60px;
+  pointer-events: none; z-index: 100;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease-out;
+}
+.ch-line { position: absolute; background: var(--accent); opacity: 0.6; }
+.ch-line.h { top: 50%; left: 0; width: 100%; height: 1px; }
+.ch-line.v { left: 50%; top: 0; height: 100%; width: 1px; }
+.ch-label { position: absolute; top: -15px; left: 10px; font-size: 0.5rem; color: var(--accent); font-weight: 900; }
+
+/* 内容布局 */
+.hud-content-grid {
+  display: grid; grid-template-columns: 1.2fr 1fr;
+  gap: 60px; height: 100%; align-items: center;
 }
 
-/* 入场动画 */
-@keyframes sticker-pop {
-  from { opacity: 0; transform: scale(0.5) translateY(30px); }
-  to { opacity: 1; transform: translate3d(var(--r-x), var(--r-y), 0) rotate(var(--r-rot)); }
-}
+.danger-tag { background: var(--eva-red); color: #fff; padding: 2px 8px; font-size: 0.7rem; font-weight: 900; display: inline-block; margin-bottom: 10px; }
+.subject-id { font-size: 0.8rem; color: var(--accent); opacity: 0.7; margin-bottom: 5px; }
+.project-title { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; font-weight: 900; margin: 0; color: var(--text-main); line-height: 1; text-transform: uppercase; }
 
-.feature-sticker {
-  animation: sticker-pop 0.6s cubic-bezier(0.23, 1, 0.32, 1) backwards var(--delay);
-}
+.desc-box { margin: 25px 0; position: relative; }
+.desc-line { width: 40px; height: 3px; background: var(--accent); margin-bottom: 15px; }
+.desc-box p { font-size: 1.1rem; line-height: 1.5; color: var(--text-main); font-weight: 600; margin: 0; }
 
-/* 基础悬停反馈：仅自身放大，无顿挫感 */
-.feature-sticker:hover {
-  transform: translate3d(var(--r-x), var(--r-y), 20px) scale(1.1) rotate(0deg) !important;
-  background: var(--accent);
-  color: #000;
-  box-shadow: 12px 12px 0px var(--border);
-  z-index: 100;
+.tech-stack-hud { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+.tech-item { font-size: 0.8rem; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.tech-icon { width: 6px; height: 6px; background: var(--accent); transform: rotate(45deg); }
+
+.nerv-action {
+  position: relative; display: inline-block; padding: 15px 35px;
+  text-decoration: none; overflow: hidden;
+  border: 2px solid var(--accent);
 }
+.action-bg { position: absolute; inset: 0; background: var(--accent); transform: translateX(-100%); transition: 0.3s; }
+.nerv-action:hover .action-bg { transform: translateX(0); }
+.action-text { position: relative; z-index: 1; font-weight: 900; color: var(--accent); transition: 0.3s; }
+.nerv-action:hover .action-text { color: #000; }
+
+/* 解构贴纸云 */
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.sticker-v7 {
+  position: relative; padding: 15px; background: rgba(var(--accent), 0.05);
+  border: 1px solid rgba(var(--accent), 0.3);
+  opacity: 0; transform: translateX(20px);
+  transition: all 0.4s ease; cursor: pointer;
+}
+.hud-active .sticker-v7 { opacity: 1; transform: translateX(0); transition-delay: var(--delay); }
+
+.sticker-num { font-size: 0.6rem; color: var(--accent); display: block; margin-bottom: 5px; opacity: 0.6; }
+.sticker-inner { color: var(--text-main); font-weight: 900; font-size: 1rem; }
+.sticker-border { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
+
+.sticker-v7:hover { background: var(--accent); }
+.sticker-v7:hover .sticker-inner, .sticker-v7:hover .sticker-num { color: #000; }
+.sticker-v7:hover .sticker-border { border-color: #000; }
+
+.hud-footer-info {
+  position: absolute; bottom: 20px; left: 50px; right: 50px;
+  display: flex; justify-content: space-between;
+  font-size: 0.6rem; color: var(--accent); opacity: 0.5; font-weight: 900;
+}
+.blink { animation: blink-hud 1s step-end infinite; }
+@keyframes blink-hud { 50% { opacity: 0; } }
 
 @media (max-width: 1100px) {
-  .project-view { padding: 40px 20px; }
-  .project-layout { 
-    grid-template-columns: 1fr; 
-    gap: 20px; 
-    max-height: 85vh; 
-    text-align: center;
-    overflow-y: auto; /* 允许内部滚动 */
-    padding-top: 40px;
-  }
-  .info-side { align-items: center; gap: 15px; }
-  .title { font-size: 2.2rem; }
-  .description { font-size: 0.95rem; line-height: 1.3; }
-  
-  .cloud-side { min-height: 250px; }
-  .cloud-container { 
-    transform: scale(0.8) !important; /* 缩小词云整体 */
-    gap: 15px; 
-  }
-  .feature-sticker { 
-    padding: 8px 16px; 
-    font-size: 0.85rem; 
-    --r-x: 0px !important; 
-    --r-y: 0px !important;
-    transform: rotate(0deg) !important; /* 移动端取消旋转保证整齐 */
-  }
-}
-
-@media (max-height: 700px) {
-  .project-layout { padding-top: 20px; gap: 10px; }
-  .cloud-side { min-height: 180px; }
+  .hud-v7-board { height: auto; max-height: none; padding: 30px; }
+  .hud-content-grid { grid-template-columns: 1fr; gap: 30px; }
+  .project-title { font-size: 2.2rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .hud-crosshair, .hud-border-svg { display: none; }
+  .hud-v7-board { border: 2px solid var(--accent); }
 }
 </style>
