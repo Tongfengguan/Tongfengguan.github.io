@@ -6,6 +6,7 @@ interface Props {
   cfRating: string | number
   cfSolved: string | number
   cfRank: string
+  cfHistory: number[]
   cfLoading: boolean
   isVisible: boolean
 }
@@ -14,156 +15,213 @@ const props = defineProps<Props>()
 const emit = defineEmits(['scroll-down'])
 
 const getRankColor = (rating: any) => {
-  const r = Number(rating); if (isNaN(r)) return 'rank-gray'
-  if (r < 1200) return 'rank-gray'; if (r < 1400) return 'rank-green'; if (r < 1600) return 'rank-cyan'
-  if (r < 1900) return 'rank-blue'; if (r < 2100) return 'rank-violet'; if (r < 2400) return 'rank-orange'
-  return 'rank-red'
+  const r = Number(rating); if (isNaN(r)) return '#808080'
+  if (r < 1200) return '#808080'; if (r < 1400) return '#008000'; if (r < 1600) return '#03a89e'
+  if (r < 1900) return '#0000ff'; if (r < 2100) return '#a0a'; if (r < 2400) return '#ff8c00'
+  return '#ff0000'
 }
 
-const rankColorClass = computed(() => getRankColor(props.cfRating))
+// 真实战力折线图映射逻辑
+const chartPath = computed(() => {
+  if (!props.cfHistory || props.cfHistory.length === 0) return ''
+  const max = Math.max(...props.cfHistory) + 100
+  const min = Math.min(...props.cfHistory) - 100
+  const range = max - min
+  
+  // 将 Rating 映射到 SVG 高度 (0-100)
+  return props.cfHistory.map((val, i) => {
+    const x = i * (360 / (props.cfHistory.length - 1))
+    const y = 100 - ((val - min) / range) * 80 - 10 // 留出上下边距
+    return `${x},${y}`
+  }).join(' ')
+})
+
+const chartPoints = computed(() => {
+  if (!props.cfHistory || props.cfHistory.length === 0) return []
+  const max = Math.max(...props.cfHistory) + 100
+  const min = Math.min(...props.cfHistory) - 100
+  const range = max - min
+  
+  return props.cfHistory.map((val, i) => ({
+    x: i * (360 / (props.cfHistory.length - 1)),
+    y: 100 - ((val - min) / range) * 80 - 10
+  }))
+})
 </script>
 
 <template>
   <section class="page-section hero-view">
-    <div class="hero-text" :class="{ 'visible': isVisible }">
-      <div class="nerv-brand">NERV STRATEGIC SYSTEM</div>
-      <h1 class="name">TFGKK</h1>
-      <div class="typing-box">
-        <span class="symbol">></span>
-        <span class="text">{{ displayedBio }}</span>
-        <span class="cursor">_</span>
+    <div class="bg-watermark">SYNC 400%</div>
+
+    <!-- 增加了 margin-top 避让头像 -->
+    <div class="central-hud" :class="{ 'hud-visible': isVisible }">
+      
+      <div class="scanner-frame">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="scan-line"></div>
       </div>
-      <div class="cf-stats-row" v-if="!cfLoading">
-        <div class="stat-item">
-          <span class="val" :class="rankColorClass">{{ cfRating }}</span>
-          <span class="lab">STRENGTH</span>
+
+      <div class="content-core">
+        <div class="top-meta">
+          <span class="status-dot blink"></span>
+          <span class="meta-text">TARGET_LOCKED: UNIT-01_PILOT</span>
         </div>
-        <div class="stat-item">
-          <span class="val">{{ cfSolved }}</span>
-          <span class="lab">RECORDS</span>
+
+        <h1 class="pilot-name">TFGKK</h1>
+        
+        <div class="bio-typing">
+          <span class="symbol">></span> {{ displayedBio }}<span class="cursor">_</span>
         </div>
-        <div class="stat-item">
-          <span class="val" :class="rankColorClass">{{ cfRank }}</span>
-          <span class="lab">RANKING</span>
+
+        <div class="central-stats-panel">
+          <div class="chart-container">
+            <div class="chart-label">TACTICAL_RATING_HISTORY_V2.0</div>
+            <svg viewBox="0 0 360 100" class="main-rating-chart">
+              <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2" />
+                  <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <path v-if="chartPath" :d="`M0,100 L${chartPath} L360,100 Z`" fill="url(#chartGradient)" />
+              <!-- 线条变细 -->
+              <polyline v-if="chartPath" fill="none" stroke="var(--accent)" stroke-width="2" :points="chartPath" stroke-linejoin="round" />
+              <!-- 圆点变小且保持正圆 -->
+              <circle v-for="(p, i) in chartPoints" :key="i" 
+                      :cx="p.x" :cy="p.y" r="2.5" fill="var(--accent)" />
+            </svg>
+          </div>
+          
+          <div class="cf-stats-row">
+            <div class="stat-group">
+              <span class="label">RATING</span>
+              <span class="value" :style="{ color: getRankColor(props.cfRating) }">{{ cfRating }}</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-group">
+              <span class="label">SOLVED</span>
+              <span class="value">{{ cfSolved }}</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-group">
+              <span class="label">RANK</span>
+              <span class="value" :style="{ color: getRankColor(props.cfRating) }">{{ cfRank }}</span>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
-    <div class="scroll-hint" role="button" aria-label="Scroll down to projects" tabindex="0" @click="emit('scroll-down')" @keydown.enter="emit('scroll-down')">
-      <div class="mouse-icon"></div>
-      <span>Scroll Down</span>
+
+    <div class="mission-trigger" @click="emit('scroll-down')">
+      <div class="arrow-down"></div>
+      <span>INITIATE SCROLL MISSION</span>
     </div>
   </section>
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&display=swap');
+
 .hero-view { 
-  height: 100vh; 
-  width: 100%; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  overflow: hidden; 
-  padding: 0; 
-  flex-direction: column; 
+  height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; 
+  font-family: 'Share Tech Mono', monospace; overflow: hidden; position: relative;
 }
 
-.hero-text { 
-  width: 100%;
-  text-align: center; 
-  opacity: 0; 
-  transform: translateY(30px); 
-  transition: all 0.8s 0.3s; 
-  padding: 0 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+* { color: var(--text-main); }
+
+.bg-watermark {
+  position: absolute; font-family: 'Orbitron', sans-serif;
+  font-size: 20vw; font-weight: 900; color: var(--accent);
+  opacity: 0.03; user-select: none; pointer-events: none;
+  z-index: 1; left: 5%; bottom: 10%;
 }
 
-.nerv-brand {
-  position: absolute;
-  top: -50px; /* 稍微再往上提一点 */
-  background: var(--eva-orange);
-  color: #000;
-  padding: 2px 12px;
-  font-weight: 900;
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  border: 2px solid #000;
-  white-space: nowrap;
+.central-hud {
+  position: relative; z-index: 10;
+  width: 90%; max-width: 800px;
+  padding: 60px;
+  opacity: 0; transform: scale(0.95);
+  transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+  margin-top: 15vh; /* 关键：向下偏移 15vh，为上方头像腾出空间 */
+}
+.hud-visible { opacity: 1; transform: scale(1); }
+
+.scanner-frame { position: absolute; inset: 0; pointer-events: none; }
+.corner { position: absolute; width: 60px; height: 60px; border: 4px solid var(--accent); opacity: 0.8; }
+.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+.scan-line {
+  position: absolute; left: 0; width: 100%; height: 2px;
+  background: var(--accent); opacity: 0.2;
+  box-shadow: 0 0 15px var(--accent);
+  animation: scan-loop 4s linear infinite;
+}
+@keyframes scan-loop { 0% { top: 0; } 100% { top: 100%; } }
+
+.content-core { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+.top-meta { 
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  background: var(--eva-red); color: #fff !important; 
+  padding: 4px 15px; font-weight: 900; font-size: 0.8rem; letter-spacing: 2px;
+}
+.top-meta * { color: #fff; }
+.status-dot { width: 8px; height: 8px; background: #fff; border-radius: 50%; }
+.blink { animation: blink-dot 1s step-end infinite; }
+@keyframes blink-dot { 50% { opacity: 0; } }
+
+.pilot-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(3rem, 10vw, 6.5rem); /* 略微缩小字号防止溢出 */
+  font-weight: 900; margin: 0;
+  line-height: 0.9; letter-spacing: -4px;
+  text-shadow: 0 0 30px rgba(var(--accent), 0.2);
 }
 
-.hero-text.visible { opacity: 1; transform: translateY(0); }
-
-.name { 
-  font-size: clamp(3rem, 12vw, 8rem); 
-  font-weight: 950; 
-  color: var(--text-main);
-  text-transform: uppercase;
-  letter-spacing: -2px; 
-  line-height: 1;
-  margin-bottom: 20px;
-  text-shadow: clamp(4px, 1vw, 6px) clamp(4px, 1vw, 6px) 0px var(--accent);
+.bio-typing {
+  font-size: 1.2rem; margin-top: 20px; font-weight: 600; opacity: 0.8;
+  width: 100%; border-bottom: 2px solid var(--accent); padding-bottom: 12px;
 }
 
-.typing-box { 
-  font-family: 'Courier New', monospace; 
-  font-size: clamp(1rem, 3.5vw, 1.8rem); 
-  background: var(--text-main);
-  color: var(--bg);
-  padding: 5px 12px;
-  transform: rotate(-1deg);
-  border: 2px solid var(--border);
-  max-width: 90vw;
-  word-break: break-all;
-}
+.central-stats-panel { width: 100%; margin-top: 30px; }
+
+.chart-container { width: 100%; height: 100px; margin-bottom: 20px; position: relative; }
+.chart-label { position: absolute; top: -15px; left: 0; font-size: 0.6rem; opacity: 0.4; letter-spacing: 1px; }
+.main-rating-chart { width: 100%; height: 100%; overflow: visible; }
 
 .cf-stats-row { 
-  display: flex; 
-  gap: clamp(10px, 4vw, 20px); 
-  margin-top: clamp(30px, 8vw, 50px); 
-  padding: 15px clamp(20px, 5vw, 40px); 
-  background: var(--card-bg); 
-  border: 3px solid var(--border);
-  box-shadow: 8px 8px 0px var(--shadow);
-  flex-wrap: wrap;
-  justify-content: center;
+  display: flex; justify-content: center; align-items: center; gap: clamp(20px, 5vw, 40px);
 }
+.stat-group { display: flex; flex-direction: column; align-items: center; }
+.stat-group .label { font-size: 0.65rem; font-weight: 900; opacity: 0.5; letter-spacing: 2px; }
+.stat-group .value { font-size: 1.5rem; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+.stat-divider { width: 2px; height: 35px; background: rgba(var(--accent), 0.2); }
 
-.stat-item .val { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 800; color: var(--text-main); }
-.stat-item .lab { font-size: 0.7rem; text-transform: uppercase; color: var(--text-mute); font-weight: 600; }
-
-.scroll-hint { position: absolute; bottom: 45px; display: flex; flex-direction: column; align-items: center; color: var(--text-mute); cursor: pointer; }
-.mouse-icon { width: 24px; height: 40px; border: 2.5px solid var(--text-mute); border-radius: 12px; position: relative; margin-bottom: 10px; }
-.mouse-icon::after { content:''; width:5px; height:5px; background:var(--accent); position:absolute; left:50%; margin-left:-2.5px; top:8px; border-radius:50%; animation: m-scroll 2s infinite; }
-
-.rank-gray { color: #808080; } 
-.rank-green { color: #008000; } 
-.rank-cyan { color: #03a89e; }
-.rank-blue { color: #0000ff; } 
-.rank-violet { color: #a0a; } 
-.rank-orange { color: #ff8c00; }
-.rank-red { color: #ff0000; }
-
-@keyframes m-scroll { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(18px); opacity: 0; } }
+.mission-trigger {
+  position: absolute; bottom: 40px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center;
+  transition: 0.3s;
+}
+.mission-trigger:hover { transform: translateY(5px); color: var(--eva-orange); }
+.mission-trigger span { font-size: 0.7rem; font-weight: 900; letter-spacing: 3px; }
+.arrow-down { 
+  width: 24px; height: 12px; background: var(--accent); 
+  clip-path: polygon(0 0, 100% 0, 50% 100%); margin-bottom: 10px;
+  animation: bounce-arrow 2s infinite;
+}
+@keyframes bounce-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
 @media (max-width: 768px) {
-  .hero-text { padding: 0 15px; }
-  .name { font-size: clamp(2.5rem, 15vw, 4rem); letter-spacing: -1px; }
-  .typing-box { font-size: 0.9rem; padding: 4px 10px; }
-  .nerv-brand { font-size: 0.6rem; top: -35px; padding: 1px 8px; }
-  
-  .cf-stats-row { 
-    margin-top: 30px;
-    padding: 12px 20px;
-    gap: 15px;
-  }
-  .stat-item .val { font-size: 1rem; }
-  .stat-item .lab { font-size: 0.6rem; }
-}
-
-@media (max-height: 700px) {
-  .hero-text { transform: translateY(-20px); }
-  .scroll-hint { bottom: 25px; }
+  .central-hud { padding: 30px; width: 95%; margin-top: 10vh; }
+  .pilot-name { font-size: 2.8rem; letter-spacing: -2px; }
+  .bio-typing { font-size: 0.9rem; }
+  .cf-stats-row { gap: 15px; }
+  .stat-group .value { font-size: 1.1rem; }
+  .chart-container { height: 70px; }
 }
 </style>

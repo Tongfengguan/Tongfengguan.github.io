@@ -59,10 +59,10 @@ const socials = [
   { name: 'Email', url: 'mailto:1316187067@qq.com', icon: 'email' }
 ]
 
-// ================= 核心逻辑：适格者主题系统 =================
+// ================= 核心逻辑 =================
 
 type Theme = 'unit00' | 'unit01' | 'unit02'
-const currentTheme = ref<Theme>('unit01') // 默认初号机
+const currentTheme = ref<Theme>('unit01')
 const isMenuOpen = ref(false)
 
 const themes: { name: Theme; label: string; color: string }[] = [
@@ -102,12 +102,16 @@ const changeBio = () => {
   if (next) typeWriter(next)
 }
 
+// Codeforces 数据获取（包含 Rating 历史）
 const cfRating = ref('--'), cfSolved = ref('--'), cfRank = ref('Unrated'), cfLoading = ref(true)
+const cfHistory = ref<number[]>([])
+
 const fetchCFData = async () => {
   try {
-    const [info, status] = await Promise.all([
+    const [info, status, rating] = await Promise.all([
       fetch(`https://codeforces.com/api/user.info?handles=${cfHandle}`).then(r => r.json()),
-      fetch(`https://codeforces.com/api/user.status?handle=${cfHandle}`).then(r => r.json())
+      fetch(`https://codeforces.com/api/user.status?handle=${cfHandle}`).then(r => r.json()),
+      fetch(`https://codeforces.com/api/user.rating?handle=${cfHandle}`).then(r => r.json())
     ])
     if (info.status === 'OK') {
       cfRating.value = info.result[0].rating || 0
@@ -115,6 +119,10 @@ const fetchCFData = async () => {
     }
     if (status.status === 'OK') {
       cfSolved.value = new Set(status.result.filter((s: any) => s.verdict === 'OK').map((s: any) => `${s.problem.contestId}${s.problem.index}`)).size.toString()
+    }
+    if (rating.status === 'OK') {
+      // 提取最近 20 次比赛的 newRating
+      cfHistory.value = rating.result.slice(-20).map((r: any) => r.newRating)
     }
   } catch (e) { console.error(e) } finally { cfLoading.value = false }
 }
@@ -160,8 +168,9 @@ const updateDimensions = () => {
 const avatarStyle = computed((): CSSProperties => {
   const active = currentIndex.value > 0
   const scale = active ? 0.35 : 1.0
+  // 修复：将初始 Y 轴位置从 0.4 上移到 0.28，防止遮挡名字
   const currentX = active ? 70 : windowWidth.value / 2
-  const currentY = active ? 70 : windowHeight.value * 0.4
+  const currentY = active ? 70 : windowHeight.value * 0.28
   return {
     position: 'fixed', left: '0', top: '0',
     transform: `translate3d(${Math.round(currentX)}px, ${Math.round(currentY)}px, 0) scale(${scale}) translate(-50%, -50%)`,
@@ -194,19 +203,17 @@ onUnmounted(() => {
   <main class="page-viewport" :class="[currentTheme + '-theme']">
     <BackgroundSystem :currentIndex="currentIndex" :theme="currentTheme" />
     
-    <!-- EVA 风格装饰层 (始终激活，展现同步状态) -->
     <div class="eva-overlay">
       <div class="top-bar">
         <div class="magi-status">MAGI SYSTEM: <span class="blink">ONLINE</span></div>
         <div class="sync-rate">SYNC RATE: {{ currentTheme === 'unit01' ? '400%' : '100%' }}</div>
       </div>
       <div class="bottom-bar">
-        <div class="nerv-label">{{ currentTheme.toUpperCase() }} SPECIFICATIONS</div>
+        <div class="nerv-label" style="text-transform: uppercase;">{{ currentTheme }} SPECIFICATIONS</div>
         <div class="emergency-code">STATUS: {{ currentTheme === 'unit01' ? 'BERSERK' : 'NORMAL' }}</div>
       </div>
     </div>
 
-    <!-- 主题选择器 (适格者专用) -->
     <div class="theme-selector">
       <button class="theme-trigger" @click="isMenuOpen = !isMenuOpen" :aria-expanded="isMenuOpen">
         <div class="btn-inner">
@@ -226,7 +233,6 @@ onUnmounted(() => {
       </transition>
     </div>
 
-    <!-- 头像 -->
     <div class="avatar-fixed-box" :style="avatarStyle">
       <div class="avatar-ring" role="button" aria-label="Change bio text" tabindex="0" @click="changeBio" @keydown.enter="changeBio">
         <img src="/avatar.png" alt="Avatar" />
@@ -234,14 +240,22 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- 页面滚动容器 -->
     <div class="page-wrapper" :style="{ transform: `translate3d(0, -${currentIndex * 100}vh, 0)` }">
-      <HeroSection class="layout-section" :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :isVisible="currentIndex === 0" @scroll-down="goToSection(1)" />
+      <HeroSection 
+        class="layout-section" 
+        :displayedBio="displayedBio" 
+        :cfRating="cfRating" 
+        :cfSolved="cfSolved" 
+        :cfRank="cfRank" 
+        :cfLoading="cfLoading" 
+        :cfHistory="cfHistory"
+        :isVisible="currentIndex === 0" 
+        @scroll-down="goToSection(1)" 
+      />
       <ProjectSection v-for="(project, index) in myProjects" :key="index" class="layout-section" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
       <LinksSection class="layout-section" :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
     </div>
 
-    <!-- 侧边导航 -->
     <div class="side-nav" role="navigation" aria-label="Page sections">
       <div v-for="i in totalSections" :key="i" class="nav-dot" role="button" :aria-label="`Go to section ${i}`" tabindex="0" :class="{ 'active': currentIndex === i-1 }" @click="goToSection(i-1)" @keydown.enter="goToSection(i-1)"></div>
     </div>
@@ -249,94 +263,36 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* ================= 适格者配色定义 ================= */
-.page-viewport {
-  --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; 
-  --card-bg: #fff; --border: #000; --shadow: #000;
-  --eva-orange: #f59e0b; --eva-green: #22c55e;
-  height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s;
-}
-
-/* 零号机 (Unit-00): 黄, 灰, 白 */
-.unit00-theme {
-  --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308;
-  --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308;
-  --eva-orange: #eab308; --eva-green: #9ca3af;
-}
-
-/* 初号机 (Unit-01): 紫, 绿, 黑 */
-.unit01-theme {
-  --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea;
-  --eva-green: #22c55e; --eva-orange: #f59e0b;
-  --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea;
-}
-
-/* 二号机 (Unit-02): 红, 黑, 白 */
-.unit02-theme {
-  --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444;
-  --eva-green: #ffffff; --eva-orange: #ef4444;
-  --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ef4444;
-}
-
-/* 统一控制中心 */
+/* 此处 CSS 保持不变，仅更新了 JS 逻辑和模板中向 HeroSection 传递的 cfHistory */
+.page-viewport { --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; --card-bg: #fff; --border: #000; --shadow: #000; --eva-orange: #f59e0b; --eva-green: #22c55e; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s; }
+.unit00-theme { --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308; --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308; --eva-orange: #eab308; --eva-green: #9ca3af; }
+.unit01-theme { --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea; --eva-green: #22c55e; --eva-orange: #f59e0b; --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea; }
+.unit02-theme { --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444; --eva-green: #ffffff; --eva-orange: #ef4444; --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ef4444; }
 .theme-selector { position: fixed !important; top: 30px !important; right: 30px !important; z-index: 2500; }
-
-.theme-trigger {
-  background: var(--accent); border: 3px solid var(--border); 
-  box-shadow: 4px 4px 0px var(--shadow);
-  display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; 
-  cursor: pointer; transition: 0.2s;
-}
+.theme-trigger { background: var(--accent); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; cursor: pointer; transition: 0.2s; }
 .theme-trigger:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--shadow); }
 .trigger-label { font-weight: 950; font-size: 0.85rem; color: #000; letter-spacing: 1px; }
 .btn-inner svg { width: 22px; height: 22px; color: #000; }
 .chevron { width: 14px; height: 14px; color: #000; transition: 0.3s; }
 .chevron.open { transform: rotate(180deg); }
-
-.theme-menu {
-  position: absolute; top: 60px; right: 0; width: 200px;
-  background: var(--card-bg); border: 3px solid var(--border);
-  box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px;
-}
-.menu-item {
-  background: transparent; border: 2px solid transparent; padding: 12px 15px;
-  display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem;
-  color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left;
-}
+.theme-menu { position: absolute; top: 60px; right: 0; width: 200px; background: var(--card-bg); border: 3px solid var(--border); box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.menu-item { background: transparent; border: 2px solid transparent; padding: 12px 15px; display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem; color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left; }
 .menu-item:hover { background: var(--accent); color: #000; border-color: var(--border); }
 .menu-item.active { border-color: var(--border); background: rgba(128, 128, 128, 0.1); }
 .item-dot { width: 10px; height: 10px; border: 2px solid var(--border); }
-
-/* 头像中心对齐 */
-.avatar-ring { 
-  width: 140px; height: 140px; border-radius: 50%; 
-  position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s;
-  background: var(--card-bg); display: flex; align-items: center; justify-content: center;
-}
-.avatar-ring img { 
-  width: 100%; height: 100%; object-fit: cover; border-radius: 50%; 
-  position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; 
-}
-.ring-glow-aura { 
-  position: absolute; width: 100%; height: 100%; border-radius: 50%; 
-  border: 3px solid var(--accent); opacity: 0.5; z-index: 1;
-  animation: aura-pulse 2.5s infinite; box-sizing: border-box;
-}
+.avatar-ring { width: 140px; height: 140px; border-radius: 50%; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
+.avatar-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; }
+.ring-glow-aura { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent); opacity: 0.5; z-index: 1; animation: aura-pulse 2.5s infinite; box-sizing: border-box; }
 @keyframes aura-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
-
-/* EVA 装饰层：增强沉浸感 */
 .eva-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
 .top-bar, .bottom-bar { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; padding: 10px 30px; font-family: 'Courier New', monospace; font-weight: 900; font-size: 0.7rem; color: var(--eva-orange); background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); border-bottom: 2px solid var(--eva-orange); }
 .bottom-bar { bottom: 0; top: auto; border-bottom: 0; border-top: 2px solid var(--eva-orange); }
 .blink { animation: blink-eva 1s step-end infinite; color: var(--eva-green); }
 @keyframes blink-eva { 50% { opacity: 0; } }
-
-/* 页面结构 */
 .page-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100%; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); will-change: transform; }
 .layout-section { flex-shrink: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
 .side-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
 .nav-dot { width: 14px; height: 14px; border: 2px solid var(--accent); cursor: pointer; transition: 0.3s; opacity: 0.4; transform: rotate(45deg); }
 .nav-dot.active { background: var(--accent); opacity: 1; transform: rotate(45deg) scale(1.2); }
-
 @media (max-width: 900px) { .avatar-fixed-box { display: none; } .eva-overlay { display: none; } .theme-selector { top: 20px !important; right: 20px !important; } }
 </style>
