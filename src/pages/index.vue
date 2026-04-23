@@ -168,13 +168,12 @@ const updateDimensions = () => {
 
 const avatarStyle = computed((): CSSProperties => {
   const active = currentIndex.value > 0
-  // 核心改动：增大初始头像尺寸 (1.3倍放大) 和 缩小后的比例 (从 0.35 提升到 0.5)
   const scale = active ? 0.5 : 1.3
-  const currentX = active ? 85 : windowWidth.value / 2
-  const currentY = active ? 85 : windowHeight.value * 0.28
+  const currentX = active ? '85px' : '50vw'
+  const currentY = active ? '85px' : '28vh'
   return {
     position: 'fixed', left: '0', top: '0',
-    transform: `translate3d(${Math.round(currentX)}px, ${Math.round(currentY)}px, 0) scale(${scale}) translate(-50%, -50%)`,
+    transform: `translate3d(${currentX}, ${currentY}, 0) scale(${scale}) translate(-50%, -50%)`,
     transition: 'all 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)',
     zIndex: 2000, willChange: 'transform'
   }
@@ -203,7 +202,6 @@ onUnmounted(() => {
 <template>
   <main class="page-viewport" :class="[currentTheme + '-theme']">
     <BackgroundSystem :currentIndex="currentIndex" :theme="currentTheme" />
-    
     <div class="eva-overlay" :class="{ 'scrolled-down': currentIndex > 0 }">
       <div class="top-bar">
         <div class="magi-status">MAGI SYSTEM: <span class="blink">ONLINE</span></div>
@@ -214,39 +212,24 @@ onUnmounted(() => {
         <div class="emergency-code">STATUS: {{ currentTheme === 'unit01' ? 'BERSERK' : 'NORMAL' }}</div>
       </div>
     </div>
-
     <div class="theme-selector">
       <button class="theme-trigger" @click="isMenuOpen = !isMenuOpen" :aria-expanded="isMenuOpen">
-        <div class="btn-inner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-        </div>
+        <div class="btn-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></div>
         <span class="trigger-label">UNIT SELECT</span>
         <svg class="chevron" :class="{ 'open': isMenuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M6 9l6 6 6-6"></path></svg>
       </button>
-      
-      <transition name="menu-slide">
-        <div v-if="isMenuOpen" class="theme-menu">
-          <button v-for="t in themes" :key="t.name" class="menu-item" :class="{ 'active': currentTheme === t.name }" @click="setTheme(t.name)">
-            <span class="item-dot" :style="{ background: t.color }"></span>
-            {{ t.label }}
-          </button>
-        </div>
-      </transition>
+      <transition name="menu-slide"><div v-if="isMenuOpen" class="theme-menu"><button v-for="t in themes" :key="t.name" class="menu-item" :class="{ 'active': currentTheme === t.name }" @click="setTheme(t.name)"><span class="item-dot" :style="{ background: t.color }"></span>{{ t.label }}</button></div></transition>
     </div>
-
     <div class="avatar-fixed-box" :style="avatarStyle">
       <div class="avatar-ring" role="button" aria-label="Change bio text" tabindex="0" @click="changeBio" @keydown.enter="changeBio">
-        <img src="/avatar.png" alt="Avatar" />
-        <div class="ring-glow-aura"></div>
+        <img src="/avatar.png" alt="Avatar" /><div class="ring-glow-aura"></div>
       </div>
     </div>
-
     <div class="page-wrapper" :style="{ transform: `translate3d(0, -${currentIndex * 100}vh, 0)` }">
       <HeroSection class="layout-section" :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :cfHistory="cfHistory" :isVisible="currentIndex === 0" @scroll-down="goToSection(1)" />
       <ProjectSection v-for="(project, index) in myProjects" :key="index" class="layout-section" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
       <LinksSection class="layout-section" :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
     </div>
-
     <div class="side-nav" role="navigation" aria-label="Page sections">
       <div v-for="i in totalSections" :key="i" class="nav-dot" role="button" :aria-label="`Go to section ${i}`" tabindex="0" :class="{ 'active': currentIndex === i-1 }" @click="goToSection(i-1)" @keydown.enter="goToSection(i-1)"></div>
     </div>
@@ -254,68 +237,59 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* ================= 全局对齐准则 ================= */
-.page-viewport {
-  --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; 
-  --card-bg: #fff; --border: #000; --shadow: #000;
-  --eva-orange: #f59e0b; --eva-green: #22c55e;
-  height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: background 0.5s;
-}
-
-.unit00-theme { --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308; --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308; --eva-orange: #eab308; --eva-green: #9ca3af; }
-.unit01-theme { --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea; --eva-green: #22c55e; --eva-orange: #f59e0b; --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea; }
-.unit02-theme { --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444; --eva-green: #ffffff; --eva-orange: #ef4444; --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ef4444; }
-
+.page-viewport { --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; --card-bg: #fff; --border: #000; --shadow: #000; --eva-orange: #f59e0b; --eva-green: #22c55e; --accent-text: #ffffff; --accent-rgb: 168, 85, 247; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s; }
+.unit00-theme { --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308; --accent-rgb: 234, 179, 8; --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308; --eva-orange: #eab308; --eva-green: #9ca3af; --accent-text: #000000; }
+.unit01-theme { --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea; --accent-rgb: 147, 51, 234; --eva-green: #22c55e; --eva-orange: #f59e0b; --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea; --accent-text: #ffffff; }
+.unit02-theme { --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444; --accent-rgb: 239, 68, 68; --eva-green: #ffffff; --eva-orange: #ef4444; --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ffffff; --accent-text: #ffffff; }
 .theme-selector { position: fixed !important; top: 30px !important; right: 30px !important; z-index: 2500; }
-.theme-trigger { background: var(--accent); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; cursor: pointer; transition: 0.2s; }
+.theme-trigger {
+  background: rgba(var(--accent-rgb), 0.2) !important; 
+  backdrop-filter: blur(12px);
+  border: 3px solid var(--border); 
+  box-shadow: 4px 4px 0px var(--shadow);
+  display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; 
+  cursor: pointer; transition: 0.2s;
+}
 .theme-trigger:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--shadow); }
-.trigger-label { font-weight: 950; font-size: 0.85rem; color: #000; letter-spacing: 1px; }
-.btn-inner svg { width: 22px; height: 22px; color: #000; }
-.chevron { width: 14px; height: 14px; color: #000; transition: 0.3s; }
+.trigger-label { font-weight: 950; font-size: 0.85rem; color: var(--text-main); letter-spacing: 1px; }
+.btn-inner svg { width: 22px; height: 22px; color: var(--accent); }
+.chevron { width: 14px; height: 14px; color: var(--accent); transition: 0.3s; }
 .chevron.open { transform: rotate(180deg); }
-.theme-menu { position: absolute; top: 60px; right: 0; width: 200px; background: var(--card-bg); border: 3px solid var(--border); box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-.menu-item { background: transparent; border: 2px solid transparent; padding: 12px 15px; display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem; color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left; }
-.menu-item:hover { background: var(--accent); color: #000; border-color: var(--border); }
-.menu-item.active { border-color: var(--border); background: rgba(128, 128, 128, 0.1); }
+
+.theme-menu {
+  position: absolute; top: 60px; right: 0; width: 200px;
+  background: rgba(var(--card-bg-rgb, 15, 15, 15), 0.8); /* 适配不同主题的菜单背板 */
+  backdrop-filter: blur(15px);
+  border: 3px solid var(--border);
+  box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px;
+}
+/* 为菜单增加一个背景色变量适配 */
+.unit00-theme .theme-menu { background: rgba(255, 255, 255, 0.85); }
+.unit01-theme .theme-menu { background: rgba(15, 15, 15, 0.85); }
+.unit02-theme .theme-menu { background: rgba(5, 5, 5, 0.85); }
+
+.menu-item {
+  background: transparent; border: 2px solid transparent; padding: 12px 15px;
+  display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem;
+  color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left;
+}
+.menu-item:hover { background: rgba(var(--accent-rgb), 0.3); border-color: var(--border); }
+.menu-item.active { border-color: var(--border); background: rgba(var(--accent-rgb), 0.1); }
 .item-dot { width: 10px; height: 10px; border: 2px solid var(--border); }
-
-/* 头像中心对齐 & 尺寸升级 */
-.avatar-ring { 
-  width: 140px; height: 140px; border-radius: 50%; 
-  position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s;
-  background: var(--card-bg); display: flex; align-items: center; justify-content: center;
-}
-.avatar-ring img { 
-  width: 100%; height: 100%; object-fit: cover; border-radius: 50%; 
-  position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; 
-}
-.ring-glow-aura { 
-  position: absolute; width: 100%; height: 100%; border-radius: 50%; 
-  border: 3px solid var(--accent); opacity: 0.5; z-index: 1;
-  animation: aura-pulse 2.5s infinite; box-sizing: border-box;
-}
+.avatar-ring { width: 140px; height: 140px; border-radius: 50%; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
+.avatar-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; }
+.ring-glow-aura { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent); opacity: 0.5; z-index: 1; animation: aura-pulse 2.5s infinite; box-sizing: border-box; }
 @keyframes aura-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
-
-/* EVA 装饰层适配 */
 .eva-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; transition: opacity 0.5s, transform 0.5s; }
-.eva-overlay.scrolled-down { opacity: 0.3; transform: scale(1.02); } /* 滚动时淡化装饰，专注内容 */
-
+.eva-overlay.scrolled-down { opacity: 0.3; transform: scale(1.02); } 
 .top-bar, .bottom-bar { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; padding: 10px 30px; font-family: 'Courier New', monospace; font-weight: 900; font-size: 0.7rem; color: var(--eva-orange); background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); border-bottom: 2px solid var(--eva-orange); }
 .bottom-bar { bottom: 0; top: auto; border-bottom: 0; border-top: 2px solid var(--eva-orange); }
 .blink { animation: blink-eva 1s step-end infinite; color: var(--eva-green); }
 @keyframes blink-eva { 50% { opacity: 0; } }
-
 .page-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100%; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); will-change: transform; }
 .layout-section { flex-shrink: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
 .side-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
 .nav-dot { width: 14px; height: 14px; border: 2px solid var(--accent); cursor: pointer; transition: 0.3s; opacity: 0.4; transform: rotate(45deg); }
 .nav-dot.active { background: var(--accent); opacity: 1; transform: rotate(45deg) scale(1.2); }
-
-@media (max-width: 900px) { 
-  .avatar-fixed-box { display: block !important; } /* 移动端重新启用头像 */
-  .avatar-ring { width: 100px; height: 100px; }
-  .eva-overlay { display: none; } 
-  .theme-selector { top: 20px !important; right: 20px !important; }
-  .side-nav { right: 15px; }
-}
+@media (max-width: 900px) { .avatar-fixed-box { display: block !important; } .avatar-ring { width: 100px; height: 100px; } .eva-overlay { display: none; } .theme-selector { top: 20px !important; right: 20px !important; } .side-nav { right: 15px; } }
 </style>

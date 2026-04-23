@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 
 interface Project {
   title: string
@@ -8,6 +8,7 @@ interface Project {
   tech: string[]
   features: string[]
   github: string
+  image?: string
 }
 
 interface Props {
@@ -19,24 +20,8 @@ interface Props {
 const props = defineProps<Props>()
 
 // 交互状态
-const mouseX = ref(0)
-const mouseY = ref(0)
-const isHovering = ref(false)
 const containerRef = ref<HTMLElement | null>(null)
 const activeSticker = ref<number | null>(null)
-
-// 准星追踪逻辑
-const handleMouseMove = (e: MouseEvent) => {
-  if (!containerRef.value || !props.isVisible) return
-  isHovering.value = true
-  const rect = containerRef.value.getBoundingClientRect()
-  mouseX.value = e.clientX - rect.left
-  mouseY.value = e.clientY - rect.top
-}
-
-const resetInteraction = () => {
-  isHovering.value = false
-}
 
 const toggleSticker = (i: number) => {
   if (window.innerWidth < 1100) {
@@ -46,17 +31,9 @@ const toggleSticker = (i: number) => {
 </script>
 
 <template>
-  <section 
-    class="page-section project-view" 
-    ref="containerRef" 
-    @mousemove="handleMouseMove"
-    @mouseleave="resetInteraction"
-  >
-    <!-- V7 终极看板：机密解构 HUD -->
-    <div 
-      class="hud-v7-board" 
-      :class="{ 'hud-active': isVisible }"
-    >
+  <section class="page-section project-view" ref="containerRef">
+    <!-- V7 终极看板：已彻底移除准星与复杂计算 -->
+    <div class="hud-v7-board" :class="{ 'hud-active': isVisible }">
       
       <!-- 1. 动态 SVG 组装边框 -->
       <svg class="hud-border-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
@@ -65,18 +42,7 @@ const toggleSticker = (i: number) => {
         <circle cx="980" cy="580" r="3" fill="var(--accent)" class="deco-dot" />
       </svg>
 
-      <!-- 2. 交互准星层 (仅在 PC 端显示) -->
-      <div 
-        v-if="isHovering" 
-        class="hud-crosshair"
-        :style="{ left: mouseX + 'px', top: mouseY + 'px' }"
-      >
-        <div class="ch-line h"></div>
-        <div class="ch-line v"></div>
-        <div class="ch-label">TRACKING...</div>
-      </div>
-
-      <!-- 3. 内容层 -->
+      <!-- 2. 内容层 -->
       <div class="hud-content-grid">
         
         <!-- 左侧：战术规格 -->
@@ -174,18 +140,6 @@ const toggleSticker = (i: number) => {
 .deco-dot { opacity: 0; transition: 0.5s 1.5s; }
 .hud-active .deco-dot { opacity: 1; }
 
-/* 交互准星 */
-.hud-crosshair {
-  position: absolute; width: 60px; height: 60px;
-  pointer-events: none; z-index: 100;
-  transform: translate(-50%, -50%);
-  transition: transform 0.1s ease-out;
-}
-.ch-line { position: absolute; background: var(--accent); opacity: 0.6; }
-.ch-line.h { top: 50%; left: 0; width: 100%; height: 1px; }
-.ch-line.v { left: 50%; top: 0; height: 100%; width: 1px; }
-.ch-label { position: absolute; top: -15px; left: 10px; font-size: 0.5rem; color: var(--accent); font-weight: 900; }
-
 /* 内容布局 */
 .hud-content-grid {
   display: grid; grid-template-columns: 1.2fr 1fr;
@@ -217,20 +171,29 @@ const toggleSticker = (i: number) => {
 /* 解构贴纸云 */
 .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .sticker-v7 {
-  position: relative; padding: 15px; background: rgba(var(--accent), 0.05);
-  border: 1px solid rgba(var(--accent), 0.3);
+  position: relative; padding: 15px; 
+  background: rgba(var(--accent-rgb), 0.03); /* 初始极淡 */
+  border: 1px solid rgba(var(--accent-rgb), 0.2); /* 初始边框也带透明 */
   opacity: 0; transform: translateX(20px);
-  transition: all 0.4s ease; cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: pointer;
 }
 .hud-active .sticker-v7 { opacity: 1; transform: translateX(0); transition-delay: var(--delay); }
 
-.sticker-num { font-size: 0.6rem; color: var(--accent); display: block; margin-bottom: 5px; opacity: 0.6; }
-.sticker-inner { color: var(--text-main); font-weight: 900; font-size: 1rem; }
-.sticker-border { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
+.sticker-num { font-size: 0.6rem; color: var(--accent); display: block; margin-bottom: 5px; opacity: 0.5; }
+.sticker-inner { color: var(--text-main); font-weight: 900; font-size: 1rem; transition: 0.2s; }
+.sticker-border { position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transition: 0.2s; }
 
-.sticker-v7:hover { background: var(--accent); }
-.sticker-v7:hover .sticker-inner, .sticker-v7:hover .sticker-num { color: #000; }
-.sticker-v7:hover .sticker-border { border-color: #000; }
+/* 悬停态：高精透明全息效果 */
+.sticker-v7:hover, .sticker-v7.mobile-active { 
+  background: rgba(var(--accent-rgb), 0.2) !important; /* 关键：变为当前颜色的透明版 */
+  border-color: var(--accent);
+  backdrop-filter: blur(12px); /* 强化磨砂感 */
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.15);
+}
+
+.sticker-v7:hover .sticker-inner { color: var(--accent); } /* 文字同步变色增加“唤醒”感 */
+.sticker-v7:hover .sticker-border { width: 100%; height: 100%; opacity: 0.3; } /* 边框装饰线扩张 */
 
 .hud-footer-info {
   position: absolute; bottom: 20px; left: 50px; right: 50px;
@@ -245,7 +208,7 @@ const toggleSticker = (i: number) => {
   .hud-content-grid { grid-template-columns: 1fr; gap: 30px; }
   .project-title { font-size: 2.2rem; }
   .feature-grid { grid-template-columns: 1fr; }
-  .hud-crosshair, .hud-border-svg { display: none; }
+  .hud-border-svg { display: none; }
   .hud-v7-board { border: 2px solid var(--accent); }
 }
 </style>
