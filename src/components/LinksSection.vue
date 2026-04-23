@@ -40,8 +40,8 @@ defineProps<Props>()
           </a>
         </div>
         <div class="copy-box">
-          <p class="copy">© 2024 TFGKK · Digital Portfolio</p>
-          <div class="status-bar">SYSTEM STATUS: OPTIMIZED</div>
+          <p class="copy">© 2024 TFGKK · NERV STRATEGIC OPERATIONS</p>
+          <div class="status-bar">SYNC STATUS: COMPLETE</div>
         </div>
       </footer>
     </div>

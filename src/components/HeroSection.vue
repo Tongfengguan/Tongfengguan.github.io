@@ -26,6 +26,7 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
 <template>
   <section class="page-section hero-view">
     <div class="hero-text" :class="{ 'visible': isVisible }">
+      <div class="nerv-brand">NERV STRATEGIC SYSTEM</div>
       <h1 class="name">TFGKK</h1>
       <div class="typing-box">
         <span class="symbol">></span>
@@ -35,15 +36,15 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
       <div class="cf-stats-row" v-if="!cfLoading">
         <div class="stat-item">
           <span class="val" :class="rankColorClass">{{ cfRating }}</span>
-          <span class="lab">Rating</span>
+          <span class="lab">STRENGTH</span>
         </div>
         <div class="stat-item">
           <span class="val">{{ cfSolved }}</span>
-          <span class="lab">Solved</span>
+          <span class="lab">RECORDS</span>
         </div>
         <div class="stat-item">
           <span class="val" :class="rankColorClass">{{ cfRank }}</span>
-          <span class="lab">Rank</span>
+          <span class="lab">RANKING</span>
         </div>
       </div>
     </div>
@@ -72,11 +73,24 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
   opacity: 0; 
   transform: translateY(30px); 
   transition: all 0.8s 0.3s; 
-  margin-top: clamp(15vh, 20vh, 25vh);
   padding: 0 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+}
+
+.nerv-brand {
+  position: absolute;
+  top: -50px; /* 稍微再往上提一点 */
+  background: var(--eva-orange);
+  color: #000;
+  padding: 2px 12px;
+  font-weight: 900;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  border: 2px solid #000;
+  white-space: nowrap;
 }
 
 .hero-text.visible { opacity: 1; transform: translateY(0); }
@@ -133,8 +147,23 @@ const rankColorClass = computed(() => getRankColor(props.cfRating))
 
 @keyframes m-scroll { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(18px); opacity: 0; } }
 
-@media (max-width: 600px) {
-  .cf-stats-row { gap: 15px; padding: 12px 20px; }
-  .hero-text { margin-top: 15vh; }
+@media (max-width: 768px) {
+  .hero-text { padding: 0 15px; }
+  .name { font-size: clamp(2.5rem, 15vw, 4rem); letter-spacing: -1px; }
+  .typing-box { font-size: 0.9rem; padding: 4px 10px; }
+  .nerv-brand { font-size: 0.6rem; top: -35px; padding: 1px 8px; }
+  
+  .cf-stats-row { 
+    margin-top: 30px;
+    padding: 12px 20px;
+    gap: 15px;
+  }
+  .stat-item .val { font-size: 1rem; }
+  .stat-item .lab { font-size: 0.6rem; }
+}
+
+@media (max-height: 700px) {
+  .hero-text { transform: translateY(-20px); }
+  .scroll-hint { bottom: 25px; }
 }
 </style>

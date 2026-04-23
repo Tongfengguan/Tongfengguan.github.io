@@ -35,30 +35,21 @@ const myProjects = [
     title: '智慧三农平台', subtitle: 'FarmerPlatform',
     desc: '全栈式“智慧三农”管理与服务平台，为农户和消费者提供政策资讯及业务管理方案。',
     tech: ['Java 21', 'Spring Boot', 'Vue 3', 'DeepSeek-V3'],
-    features: [
-      'AI 智能数据助手', '全栈现代化架构', '响应式三农主题', 
-      '高性能后端接口', '大数据可视化', '分布式系统设计'
-    ], // 6个
+    features: ['AI 智能数据助手', '全栈现代化架构', '响应式三农主题', '高性能后端接口', '大数据可视化', '分布式系统设计'],
     github: 'https://github.com/tongfengguan/FarmerPlatform'
   },
   {
     title: '学科竞赛报名系统', subtitle: 'Competition Manager',
     desc: '基于 Spring Boot 3 + Vue 3 的现代化全栈竞赛管理平台，实现数据运维与安全报名。',
     tech: ['Spring Boot 3', 'Vue 3', 'MySQL 8', 'EasyExcel'],
-    features: [
-      '自动化数据维护', '多重安全机制', '角色权限管理', 
-      '鲁棒性网络层', 'Excel 异步导出', '高并发报名队列'
-    ], // 6个
+    features: ['自动化数据维护', '多重安全机制', '角色权限管理', '鲁棒性网络层', 'Excel 异步导出', '高并发报名队列'],
     github: 'https://github.com/tongfengguan/SchoolCompetitionWeb'
   },
   {
     title: '校园失物招领', subtitle: 'Campus Lost & Found',
     desc: '基于 Uni-app (Vue3) + Spring Boot 的前后端分离架构，提升校园物品寻回效率。',
     tech: ['Uni-app', 'Vue 3', 'Spring Boot', 'JWT'],
-    features: [
-      '发布寻物/招领', '物品列表浏览', '申请认领', 
-      '管理端审核', '地图位置标注', '实时消息推送'
-    ], // 6个
+    features: ['发布寻物/招领', '物品列表浏览', '申请认领', '管理端审核', '地图位置标注', '实时消息推送'],
     github: 'https://github.com/tongfengguan/Campus-Lost-and-Found-System',
   }
 ]
@@ -68,10 +59,28 @@ const socials = [
   { name: 'Email', url: 'mailto:1316187067@qq.com', icon: 'email' }
 ]
 
-// ================= 核心逻辑 =================
+// ================= 核心逻辑：适格者主题系统 =================
 
-const isDark = ref(true)
-const toggleDark = () => { isDark.value = !isDark.value }
+type Theme = 'unit00' | 'unit01' | 'unit02'
+const currentTheme = ref<Theme>('unit01') // 默认初号机
+const isMenuOpen = ref(false)
+
+const themes: { name: Theme; label: string; color: string }[] = [
+  { name: 'unit00', label: '零号機 · PROTO', color: '#eab308' },
+  { name: 'unit01', label: '初号機 · TEST', color: '#9333ea' },
+  { name: 'unit02', label: '弐号機 · PROD', color: '#ef4444' }
+]
+
+const setTheme = (name: Theme) => {
+  currentTheme.value = name
+  isMenuOpen.value = false
+}
+
+const handleClickOutside = (e: MouseEvent) => {
+  if (isMenuOpen.value && !(e.target as HTMLElement).closest('.theme-selector')) {
+    isMenuOpen.value = false
+  }
+}
 
 const displayedBio = ref('')
 let currentTimer: any = null
@@ -150,14 +159,14 @@ const updateDimensions = () => {
 
 const avatarStyle = computed((): CSSProperties => {
   const active = currentIndex.value > 0
-  const scale = active ? 0.4 : 1.0
-  const currentX = active ? 60 : windowWidth.value / 2
-  const currentY = active ? 60 : windowHeight.value * 0.4
+  const scale = active ? 0.35 : 1.0
+  const currentX = active ? 70 : windowWidth.value / 2
+  const currentY = active ? 70 : windowHeight.value * 0.4
   return {
     position: 'fixed', left: '0', top: '0',
     transform: `translate3d(${Math.round(currentX)}px, ${Math.round(currentY)}px, 0) scale(${scale}) translate(-50%, -50%)`,
     transition: 'all 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)',
-    zIndex: 1000, willChange: 'transform'
+    zIndex: 2000, willChange: 'transform'
   }
 })
 
@@ -168,6 +177,7 @@ onMounted(() => {
   window.addEventListener('touchstart', handleTouchStart, { passive: true })
   window.addEventListener('touchend', handleTouchEnd, { passive: true })
   window.addEventListener('resize', updateDimensions)
+  window.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
@@ -175,33 +185,52 @@ onUnmounted(() => {
   window.removeEventListener('touchstart', handleTouchStart)
   window.removeEventListener('touchend', handleTouchEnd)
   window.removeEventListener('resize', updateDimensions)
+  window.removeEventListener('click', handleClickOutside)
   if (currentTimer) clearTimeout(currentTimer)
 })
 </script>
 
 <template>
-  <main class="page-viewport" :class="{ 'dark-theme': isDark }">
-    <BackgroundSystem :currentIndex="currentIndex" />
+  <main class="page-viewport" :class="[currentTheme + '-theme']">
+    <BackgroundSystem :currentIndex="currentIndex" :theme="currentTheme" />
     
-    <!-- 主题切换 -->
-    <button class="theme-btn" aria-label="Toggle dark mode" @click="toggleDark">
-      <div class="btn-inner">
-        <svg v-if="!isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
-          <circle cx="12" cy="12" r="4"></circle>
-          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 22L22 2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-        </svg>
-        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square">
-          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-          <path d="M19 3v4M17 5h4"></path>
-        </svg>
+    <!-- EVA 风格装饰层 (始终激活，展现同步状态) -->
+    <div class="eva-overlay">
+      <div class="top-bar">
+        <div class="magi-status">MAGI SYSTEM: <span class="blink">ONLINE</span></div>
+        <div class="sync-rate">SYNC RATE: {{ currentTheme === 'unit01' ? '400%' : '100%' }}</div>
       </div>
-    </button>
+      <div class="bottom-bar">
+        <div class="nerv-label">{{ currentTheme.toUpperCase() }} SPECIFICATIONS</div>
+        <div class="emergency-code">STATUS: {{ currentTheme === 'unit01' ? 'BERSERK' : 'NORMAL' }}</div>
+      </div>
+    </div>
+
+    <!-- 主题选择器 (适格者专用) -->
+    <div class="theme-selector">
+      <button class="theme-trigger" @click="isMenuOpen = !isMenuOpen" :aria-expanded="isMenuOpen">
+        <div class="btn-inner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        </div>
+        <span class="trigger-label">UNIT SELECT</span>
+        <svg class="chevron" :class="{ 'open': isMenuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M6 9l6 6 6-6"></path></svg>
+      </button>
+      
+      <transition name="menu-slide">
+        <div v-if="isMenuOpen" class="theme-menu">
+          <button v-for="t in themes" :key="t.name" class="menu-item" :class="{ 'active': currentTheme === t.name }" @click="setTheme(t.name)">
+            <span class="item-dot" :style="{ background: t.color }"></span>
+            {{ t.label }}
+          </button>
+        </div>
+      </transition>
+    </div>
 
     <!-- 头像 -->
     <div class="avatar-fixed-box" :style="avatarStyle">
       <div class="avatar-ring" role="button" aria-label="Change bio text" tabindex="0" @click="changeBio" @keydown.enter="changeBio">
         <img src="/avatar.png" alt="Avatar" />
-        <div class="ring-glow"></div>
+        <div class="ring-glow-aura"></div>
       </div>
     </div>
 
@@ -220,33 +249,94 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.page-viewport { --bg: #ffffff; --text-main: #000000; --text-mute: #333333; --accent: #a855f7; --card-bg: #ffffff; --border: #000000; --shadow: #000000; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s; }
-.page-viewport.dark-theme { --bg: #0f0f0f; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #22d3ee; --card-bg: #1a1a1a; --border: #ffffff; --shadow: var(--accent); }
-.page-wrapper { 
-  display: flex;
-  flex-direction: column;
-  height: 100vh; 
-  width: 100%; 
-  transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1); 
-  will-change: transform; 
+/* ================= 适格者配色定义 ================= */
+.page-viewport {
+  --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; 
+  --card-bg: #fff; --border: #000; --shadow: #000;
+  --eva-orange: #f59e0b; --eva-green: #22c55e;
+  height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s;
 }
 
-.layout-section {
-  flex-shrink: 0;
-  width: 100%;
-  height: 100vh;
+/* 零号机 (Unit-00): 黄, 灰, 白 */
+.unit00-theme {
+  --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308;
+  --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308;
+  --eva-orange: #eab308; --eva-green: #9ca3af;
 }
-.theme-btn { position: fixed; top: 30px; right: 30px; z-index: 1100; width: 50px; height: 50px; background: var(--accent); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.theme-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--shadow); }
-.avatar-fixed-box { pointer-events: none; }
-.avatar-ring { width: 140px; height: 140px; border: 4px solid var(--border); box-shadow: 8px 8px 0px var(--shadow); overflow: hidden; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.avatar-ring:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0px var(--shadow); }
-.avatar-ring img { width: 100%; height: 100%; object-fit: cover; }
-.side-nav { position: fixed; right: 35px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 18px; z-index: 100; }
-.nav-dot { position: relative; width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--accent); cursor: pointer; transition: 0.3s ease-out; opacity: 0.5; }
-.nav-dot::after { content: ''; position: absolute; inset: -16px; }
-.nav-dot.active { height: 35px; border-radius: 6px; background: var(--accent); opacity: 1; }
-.nav-dot:focus-visible, .theme-btn:focus-visible, .avatar-ring:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
-@media (max-width: 900px) { .avatar-fixed-box { display: none; } .side-nav { right: 15px; } }
+
+/* 初号机 (Unit-01): 紫, 绿, 黑 */
+.unit01-theme {
+  --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea;
+  --eva-green: #22c55e; --eva-orange: #f59e0b;
+  --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea;
+}
+
+/* 二号机 (Unit-02): 红, 黑, 白 */
+.unit02-theme {
+  --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444;
+  --eva-green: #ffffff; --eva-orange: #ef4444;
+  --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ef4444;
+}
+
+/* 统一控制中心 */
+.theme-selector { position: fixed !important; top: 30px !important; right: 30px !important; z-index: 2500; }
+
+.theme-trigger {
+  background: var(--accent); border: 3px solid var(--border); 
+  box-shadow: 4px 4px 0px var(--shadow);
+  display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; 
+  cursor: pointer; transition: 0.2s;
+}
+.theme-trigger:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--shadow); }
+.trigger-label { font-weight: 950; font-size: 0.85rem; color: #000; letter-spacing: 1px; }
+.btn-inner svg { width: 22px; height: 22px; color: #000; }
+.chevron { width: 14px; height: 14px; color: #000; transition: 0.3s; }
+.chevron.open { transform: rotate(180deg); }
+
+.theme-menu {
+  position: absolute; top: 60px; right: 0; width: 200px;
+  background: var(--card-bg); border: 3px solid var(--border);
+  box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px;
+}
+.menu-item {
+  background: transparent; border: 2px solid transparent; padding: 12px 15px;
+  display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem;
+  color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left;
+}
+.menu-item:hover { background: var(--accent); color: #000; border-color: var(--border); }
+.menu-item.active { border-color: var(--border); background: rgba(128, 128, 128, 0.1); }
+.item-dot { width: 10px; height: 10px; border: 2px solid var(--border); }
+
+/* 头像中心对齐 */
+.avatar-ring { 
+  width: 140px; height: 140px; border-radius: 50%; 
+  position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s;
+  background: var(--card-bg); display: flex; align-items: center; justify-content: center;
+}
+.avatar-ring img { 
+  width: 100%; height: 100%; object-fit: cover; border-radius: 50%; 
+  position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; 
+}
+.ring-glow-aura { 
+  position: absolute; width: 100%; height: 100%; border-radius: 50%; 
+  border: 3px solid var(--accent); opacity: 0.5; z-index: 1;
+  animation: aura-pulse 2.5s infinite; box-sizing: border-box;
+}
+@keyframes aura-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
+
+/* EVA 装饰层：增强沉浸感 */
+.eva-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
+.top-bar, .bottom-bar { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; padding: 10px 30px; font-family: 'Courier New', monospace; font-weight: 900; font-size: 0.7rem; color: var(--eva-orange); background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); border-bottom: 2px solid var(--eva-orange); }
+.bottom-bar { bottom: 0; top: auto; border-bottom: 0; border-top: 2px solid var(--eva-orange); }
+.blink { animation: blink-eva 1s step-end infinite; color: var(--eva-green); }
+@keyframes blink-eva { 50% { opacity: 0; } }
+
+/* 页面结构 */
+.page-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100%; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); will-change: transform; }
+.layout-section { flex-shrink: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
+.side-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+.nav-dot { width: 14px; height: 14px; border: 2px solid var(--accent); cursor: pointer; transition: 0.3s; opacity: 0.4; transform: rotate(45deg); }
+.nav-dot.active { background: var(--accent); opacity: 1; transform: rotate(45deg) scale(1.2); }
+
+@media (max-width: 900px) { .avatar-fixed-box { display: none; } .eva-overlay { display: none; } .theme-selector { top: 20px !important; right: 20px !important; } }
 </style>

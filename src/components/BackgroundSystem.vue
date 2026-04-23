@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   currentIndex: number
+  theme: 'unit00' | 'unit01' | 'unit02'
 }
 const props = defineProps<Props>()
 
@@ -10,9 +11,23 @@ const mouseX = ref(0)
 const mouseY = ref(0)
 
 const handleMouseMove = (e: MouseEvent) => {
-  mouseX.value = (e.clientX / window.innerWidth - 0.5) * 20
-  mouseY.value = (e.clientY / window.innerHeight - 0.5) * 20
+  mouseX.value = (e.clientX / window.innerWidth - 0.5) * 15
+  mouseY.value = (e.clientY / window.innerHeight - 0.5) * 15
 }
+
+// 主题背景色映射
+const bgGradient = computed(() => {
+  if (props.theme === 'unit00') return 'radial-gradient(circle at center, #fffbeb 0%, #ffffff 100%)'
+  if (props.theme === 'unit02') return 'radial-gradient(circle at center, #1a0505 0%, #050505 100%)'
+  return 'radial-gradient(circle at center, #1a1033 0%, #030303 100%)'
+})
+
+// 六边形碎片颜色映射
+const fragmentColor = computed(() => {
+  if (props.theme === 'unit00') return '#eab308' // 黄
+  if (props.theme === 'unit02') return '#ef4444' // 红
+  return '#22c55e' // 绿 (初号机)
+})
 
 onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
@@ -23,93 +38,91 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="dynamic-bg">
-    <!-- 基础网格 -->
-    <div class="grid-overlay"></div>
+  <div class="dynamic-bg" :style="{ background: bgGradient }">
+    <!-- 六边形网格底层 -->
+    <div class="honeycomb-overlay" :style="{ '--line-color': fragmentColor }"></div>
     
-    <!-- 动态浮动区块 -->
+    <!-- 精准对齐的 AT Field 阵列 -->
     <div 
       class="float-layer"
       :style="{ transform: `translate3d(${mouseX}px, ${mouseY}px, 0)` }"
     >
       <div 
-        v-for="i in 8" 
+        v-for="i in 15" 
         :key="i" 
-        :class="['shape', `shape-${i}`]"
+        class="at-fragment"
         :style="{ 
-          top: `${(i * 15) % 100}%`, 
-          left: `${(i * 23) % 100}%`,
-          transform: `rotate(${props.currentIndex * 45 + i * 20}deg) scale(${1 + (i % 3) * 0.2})`
+          top: `${Math.floor((i-1) / 5) * 25 + 10}%`, 
+          left: `${((i-1) % 5) * 20 + ((Math.floor((i-1)/5) % 2) * 10)}%`,
+          '--rot': `${props.currentIndex * 30 + i * 10}deg`,
+          '--delay': `${-(i * 1.5)}s`,
+          '--color': fragmentColor,
+          '--scale': `${0.4 + (i % 3) * 0.15}`
         }"
-      ></div>
+      >
+        <!-- 完美的六边形 -->
+        <div class="perfect-hex"></div>
+      </div>
     </div>
 
-    <!-- 装饰性线条 -->
-    <div class="circuit-lines"></div>
+    <!-- 动态扫描线 -->
+    <div class="scan-line" :style="{ '--scan-color': fragmentColor }"></div>
   </div>
 </template>
 
 <style scoped>
 .dynamic-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background: var(--bg);
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  transition: background 0.8s ease;
   pointer-events: none;
 }
 
-.grid-overlay {
+.honeycomb-overlay {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='56' height='100' viewBox='0 0 56 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='currentColor' stroke-width='1' stroke-opacity='0.08'/%3E%3C/svg%3E");
+  background-size: 56px 100px;
+  color: var(--line-color);
+  transition: color 0.8s ease;
+}
+
+.float-layer { position: absolute; inset: 0; transition: transform 0.2s ease-out; }
+
+.at-fragment {
   position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(var(--text-mute) 1px, transparent 1px),
-    linear-gradient(90deg, var(--text-mute) 1px, transparent 1px);
-  background-size: 80px 80px;
-  opacity: 0.1;
+  transform: rotate(var(--rot)) scale(var(--scale));
+  opacity: 0.15;
+  animation: float-at 10s infinite ease-in-out var(--delay);
 }
 
-.float-layer {
-  position: absolute;
-  inset: -50px;
-  transition: transform 0.2s ease-out;
+/* 使用 clip-path 绘制完美的六边形 */
+.perfect-hex {
+  width: 80px; height: 90px;
+  background: var(--color);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transition: background 0.8s ease;
+  /* 镂空效果：嵌套一个小六边形 */
+  display: flex; align-items: center; justify-content: center;
+}
+.perfect-hex::after {
+  content: '';
+  width: 85%; height: 85%;
+  background: var(--bg); /* 镂空背景同步主色 */
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transition: background 0.8s ease;
 }
 
-.shape {
-  position: absolute;
-  border: 2px solid var(--border);
-  background: transparent;
-  box-shadow: clamp(4px, 1vw, 6px) clamp(4px, 1vw, 6px) 0px var(--shadow);
-  transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-  opacity: 0.12;
+@keyframes float-at {
+  0%, 100% { transform: translate(0, 0) rotate(var(--rot)) scale(var(--scale)); }
+  50% { transform: translate(15px, -15px) rotate(calc(var(--rot) + 8deg)); }
 }
 
-/* 生成不同形状 */
-.shape:nth-child(odd) { width: clamp(30px, 8vw, 60px); height: clamp(30px, 8vw, 60px); border-radius: 0; }
-.shape:nth-child(even) { width: clamp(20px, 5vw, 40px); height: clamp(20px, 5vw, 40px); border-radius: 50%; }
-.shape:nth-child(3n) { width: clamp(40px, 10vw, 80px); height: clamp(10px, 3vw, 20px); border-radius: 100px; }
-
-/* 关键帧漂浮动画 */
-@keyframes drift {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(15px, -15px) rotate(5deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
+.scan-line {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, var(--scan-color) 50%, transparent 100%);
+  background-size: 100% 4px;
+  opacity: 0.04;
+  animation: scan 12s linear infinite;
+  transition: background 0.8s ease;
 }
-
-.shape {
-  animation: drift 10s infinite ease-in-out;
-}
-
-.shape:nth-child(2n) { animation-duration: 15s; animation-delay: -2s; }
-.shape:nth-child(3n) { animation-duration: 20s; animation-delay: -5s; }
-
-.circuit-lines {
-  position: absolute;
-  inset: 0;
-  background: 
-    linear-gradient(90deg, transparent 49.5%, var(--accent) 49.5%, var(--accent) 50.5%, transparent 50.5%),
-    linear-gradient(transparent 49.5%, var(--accent) 49.5%, var(--accent) 50.5%, transparent 50.5%);
-  background-size: 20% 20%;
-  opacity: 0.03;
-}
+@keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
 </style>

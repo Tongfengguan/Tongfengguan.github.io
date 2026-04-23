@@ -46,7 +46,7 @@ onUnmounted(() => {
       <!-- 左侧：项目核心信息 -->
       <div class="info-side">
         <div class="project-header">
-          <span class="index-tag">NO.{{ index + 1 }}</span>
+          <span class="index-tag">SUBJECT.{{ index + 1 }}</span>
           <h2 class="title">{{ project.title }}</h2>
           <span class="subtitle">{{ project.subtitle }}</span>
         </div>
@@ -202,9 +202,35 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1100px) {
-  .project-layout { grid-template-columns: 1fr; gap: 30px; text-align: center; }
-  .info-side { align-items: center; }
-  .cloud-container { gap: 15px; }
-  .feature-sticker { padding: 10px 20px; font-size: 0.9rem; transform: rotate(0deg) !important; }
+  .project-view { padding: 40px 20px; }
+  .project-layout { 
+    grid-template-columns: 1fr; 
+    gap: 20px; 
+    max-height: 85vh; 
+    text-align: center;
+    overflow-y: auto; /* 允许内部滚动 */
+    padding-top: 40px;
+  }
+  .info-side { align-items: center; gap: 15px; }
+  .title { font-size: 2.2rem; }
+  .description { font-size: 0.95rem; line-height: 1.3; }
+  
+  .cloud-side { min-height: 250px; }
+  .cloud-container { 
+    transform: scale(0.8) !important; /* 缩小词云整体 */
+    gap: 15px; 
+  }
+  .feature-sticker { 
+    padding: 8px 16px; 
+    font-size: 0.85rem; 
+    --r-x: 0px !important; 
+    --r-y: 0px !important;
+    transform: rotate(0deg) !important; /* 移动端取消旋转保证整齐 */
+  }
+}
+
+@media (max-height: 700px) {
+  .project-layout { padding-top: 20px; gap: 10px; }
+  .cloud-side { min-height: 180px; }
 }
 </style>
