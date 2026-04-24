@@ -221,7 +221,18 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="page-wrapper" :style="{ transform: `translate3d(0, -${currentIndex * 100}vh, 0)` }">
-      <HeroSection class="layout-section" :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :cfHistory="cfHistory" :isVisible="currentIndex === 0" @scroll-down="goToSection(1)" />
+      <HeroSection 
+        class="layout-section" 
+        :displayedBio="displayedBio" 
+        :cfRating="cfRating" 
+        :cfSolved="cfSolved" 
+        :cfRank="cfRank" 
+        :cfLoading="cfLoading" 
+        :cfHistory="cfHistory"
+        :theme="currentTheme"
+        :isVisible="currentIndex === 0" 
+        @scroll-down="goToSection(1)" 
+      />
       <ProjectSection v-for="(project, index) in myProjects" :key="index" class="layout-section" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
       <LinksSection class="layout-section" :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
     </div>
