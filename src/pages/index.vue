@@ -159,23 +159,19 @@ const handleTouchEnd = (e: TouchEvent) => {
   }
 }
 
-const windowWidth = ref(window.innerWidth)
-const windowHeight = ref(window.innerHeight)
-const updateDimensions = () => {
-  windowWidth.value = window.innerWidth
-  windowHeight.value = window.innerHeight
-}
-
 const avatarStyle = computed((): CSSProperties => {
   const active = currentIndex.value > 0
   const scale = active ? 0.5 : 1.3
-  const currentX = active ? '85px' : '50vw'
-  const currentY = active ? '85px' : '28vh'
+  
+  // 核心修复：使用 left/top 进行绝对对齐，彻底消除“偏左”误差
   return {
-    position: 'fixed', left: '0', top: '0',
-    transform: `translate3d(${currentX}, ${currentY}, 0) scale(${scale}) translate(-50%, -50%)`,
+    position: 'fixed',
+    left: active ? '85px' : '50%',
+    top: active ? '85px' : '28%',
+    transform: `translate(-50%, -50%) scale(${scale})`,
     transition: 'all 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)',
-    zIndex: 2000, willChange: 'transform'
+    zIndex: 2000,
+    willChange: 'transform'
   }
 })
 
@@ -185,7 +181,7 @@ onMounted(() => {
   window.addEventListener('wheel', handleWheel, { passive: false })
   window.addEventListener('touchstart', handleTouchStart, { passive: true })
   window.addEventListener('touchend', handleTouchEnd, { passive: true })
-  window.addEventListener('resize', updateDimensions)
+  window.addEventListener('resize', () => {}) // 移除了不必要的动态变量，提高稳定性
   window.addEventListener('click', handleClickOutside)
 })
 
@@ -193,7 +189,6 @@ onUnmounted(() => {
   window.removeEventListener('wheel', handleWheel)
   window.removeEventListener('touchstart', handleTouchStart)
   window.removeEventListener('touchend', handleTouchEnd)
-  window.removeEventListener('resize', updateDimensions)
   window.removeEventListener('click', handleClickOutside)
   if (currentTimer) clearTimeout(currentTimer)
 })
@@ -237,49 +232,34 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.page-viewport { --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; --card-bg: #fff; --border: #000; --shadow: #000; --eva-orange: #f59e0b; --eva-green: #22c55e; --accent-text: #ffffff; --accent-rgb: 168, 85, 247; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: 0.5s; }
+.page-viewport { --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; --card-bg: #fff; --border: #000; --shadow: #000; --eva-orange: #f59e0b; --eva-green: #22c55e; --accent-text: #ffffff; --accent-rgb: 168, 85, 247; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: background 0.5s; }
 .unit00-theme { --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308; --accent-rgb: 234, 179, 8; --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308; --eva-orange: #eab308; --eva-green: #9ca3af; --accent-text: #000000; }
 .unit01-theme { --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea; --accent-rgb: 147, 51, 234; --eva-green: #22c55e; --eva-orange: #f59e0b; --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea; --accent-text: #ffffff; }
 .unit02-theme { --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444; --accent-rgb: 239, 68, 68; --eva-green: #ffffff; --eva-orange: #ef4444; --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ffffff; --accent-text: #ffffff; }
+
 .theme-selector { position: fixed !important; top: 30px !important; right: 30px !important; z-index: 2500; }
-.theme-trigger {
-  background: rgba(var(--accent-rgb), 0.2) !important; 
-  backdrop-filter: blur(12px);
-  border: 3px solid var(--border); 
-  box-shadow: 4px 4px 0px var(--shadow);
-  display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; 
-  cursor: pointer; transition: 0.2s;
-}
+.theme-trigger { background: rgba(var(--accent-rgb), 0.2) !important; backdrop-filter: blur(12px); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; cursor: pointer; transition: 0.2s; }
 .theme-trigger:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--shadow); }
 .trigger-label { font-weight: 950; font-size: 0.85rem; color: var(--text-main); letter-spacing: 1px; }
 .btn-inner svg { width: 22px; height: 22px; color: var(--accent); }
 .chevron { width: 14px; height: 14px; color: var(--accent); transition: 0.3s; }
 .chevron.open { transform: rotate(180deg); }
-
-.theme-menu {
-  position: absolute; top: 60px; right: 0; width: 200px;
-  background: rgba(var(--card-bg-rgb, 15, 15, 15), 0.8); /* 适配不同主题的菜单背板 */
-  backdrop-filter: blur(15px);
-  border: 3px solid var(--border);
-  box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px;
-}
-/* 为菜单增加一个背景色变量适配 */
+.theme-menu { position: absolute; top: 60px; right: 0; width: 200px; background: rgba(var(--card-bg-rgb, 15, 15, 15), 0.8); backdrop-filter: blur(15px); border: 3px solid var(--border); box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .unit00-theme .theme-menu { background: rgba(255, 255, 255, 0.85); }
 .unit01-theme .theme-menu { background: rgba(15, 15, 15, 0.85); }
 .unit02-theme .theme-menu { background: rgba(5, 5, 5, 0.85); }
-
-.menu-item {
-  background: transparent; border: 2px solid transparent; padding: 12px 15px;
-  display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem;
-  color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left;
-}
+.menu-item { background: transparent; border: 2px solid transparent; padding: 12px 15px; display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem; color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left; }
 .menu-item:hover { background: rgba(var(--accent-rgb), 0.3); border-color: var(--border); }
 .menu-item.active { border-color: var(--border); background: rgba(var(--accent-rgb), 0.1); }
 .item-dot { width: 10px; height: 10px; border: 2px solid var(--border); }
-.avatar-ring { width: 140px; height: 140px; border-radius: 50%; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
+
+/* 头像对齐修复 */
+.avatar-fixed-box { width: 180px; height: 180px; pointer-events: none; }
+.avatar-ring { width: 100%; height: 100%; border-radius: 50%; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
 .avatar-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; }
 .ring-glow-aura { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent); opacity: 0.5; z-index: 1; animation: aura-pulse 2.5s infinite; box-sizing: border-box; }
 @keyframes aura-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
+
 .eva-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; transition: opacity 0.5s, transform 0.5s; }
 .eva-overlay.scrolled-down { opacity: 0.3; transform: scale(1.02); } 
 .top-bar, .bottom-bar { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; padding: 10px 30px; font-family: 'Courier New', monospace; font-weight: 900; font-size: 0.7rem; color: var(--eva-orange); background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); border-bottom: 2px solid var(--eva-orange); }
@@ -291,5 +271,5 @@ onUnmounted(() => {
 .side-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
 .nav-dot { width: 14px; height: 14px; border: 2px solid var(--accent); cursor: pointer; transition: 0.3s; opacity: 0.4; transform: rotate(45deg); }
 .nav-dot.active { background: var(--accent); opacity: 1; transform: rotate(45deg) scale(1.2); }
-@media (max-width: 900px) { .avatar-fixed-box { display: block !important; } .avatar-ring { width: 100px; height: 100px; } .eva-overlay { display: none; } .theme-selector { top: 20px !important; right: 20px !important; } .side-nav { right: 15px; } }
+@media (max-width: 900px) { .avatar-fixed-box { width: 120px; height: 120px; } .avatar-ring { width: 100%; height: 100%; } .eva-overlay { display: none; } .theme-selector { top: 20px !important; right: 20px !important; } .side-nav { right: 15px; } }
 </style>
