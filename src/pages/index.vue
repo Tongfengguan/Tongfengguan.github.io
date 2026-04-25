@@ -54,6 +54,14 @@ const myProjects = [
     features: ['发布寻物/招领', '物品列表浏览', '申请认领', '管理端审核', '地图位置标注', '实时消息推送'],
     image: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1000&auto=format&fit=crop',
     github: 'https://github.com/tongfengguan/Campus-Lost-and-Found-System',
+  },
+  {
+    title: '绫地宁宁 AI 助手', subtitle: 'NingNing-Bot',
+    desc: '基于 Python + DeepSeek-V3 + NapCatQQ 构建的高度还原向 AI 机器人，具备 RAG 超长记忆、知识库搜索及视觉识图能力。',
+    tech: ['Python 3.13', 'DeepSeek-V3', 'FastAPI', 'RAG', 'SQLite'],
+    features: ['灵魂级人设还原', 'RAG 超长长效记忆', '语义知识库搜索', '魔女之眼视觉识图', 'B 站热门实时联动', '开发者可视化仪表盘'],
+    image: 'https://images.unsplash.com/photo-1531746790731-6c087fdec69a?q=80&w=1000&auto=format&fit=crop',
+    github: 'https://github.com/Tongfengguan/LingDiNingNing_talkbot'
   }
 ]
 
