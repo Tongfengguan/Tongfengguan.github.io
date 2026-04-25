@@ -19,7 +19,7 @@ defineProps<Props>()
 
 <template>
   <div class="bookmarks-container">
-    <div class="header-tag">一些奇奇怪怪的东西喵</div>
+    <div class="header-tag">[EXTERNAL_ARCHIVES] // 外部数据链</div>
     
     <div class="category-grid">
       <div v-for="cat in bookmarks" :key="cat.category" class="category-block">

@@ -231,13 +231,17 @@ const resetInteraction = () => { isHovering.value = false; mouseX.value = 0; mou
 
 /* --- 3. 右侧指令流监视器 --- */
 .monitor-side { 
-  display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(var(--accent-rgb), 0.2); padding: 25px;
+  display: flex; flex-direction: column; 
+  background: rgba(10, 10, 10, 0.8); /* 统一深色背板，确保白字绝对清晰 */
+  border: 1px solid rgba(var(--accent-rgb), 0.4); 
+  padding: 25px;
   transform: translateZ(50px);
+  backdrop-filter: blur(15px);
 }
+
 .monitor-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; }
 .mon-title { font-size: 0.75rem; font-weight: 900; color: var(--accent); letter-spacing: 1px; }
-.mon-ver { font-size: 0.6rem; opacity: 0.4; color: var(--text-main); }
+.mon-ver { font-size: 0.6rem; opacity: 0.4; color: #fff; }
 
 .command-stream { display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
 .command-line { 
@@ -247,9 +251,22 @@ const resetInteraction = () => { isHovering.value = false; mouseX.value = 0; mou
 .panel-active .command-line { animation: c-entry 0.5s forwards; animation-delay: var(--delay); }
 @keyframes c-entry { to { opacity: 1; transform: translateX(0); } }
 
-.cmd-prefix { color: var(--accent); font-weight: 900; font-size: 0.75rem; }
-.cmd-val { color: var(--text-main); font-weight: 700; flex: 1; }
-.cmd-status { color: var(--eva-green); font-weight: 900; font-size: 0.75rem; padding: 1px 6px; border: 1px solid var(--eva-green); }
+.cmd-prefix { 
+  color: var(--accent); font-weight: 900; font-size: 0.75rem; 
+  text-shadow: 0 0 5px rgba(var(--accent-rgb), 0.3); 
+  flex-shrink: 0;
+}
+.cmd-val { 
+  color: #fff !important; /* 统一强制白色 */
+  font-weight: 900; 
+  flex: 1; 
+  letter-spacing: 1px;
+  font-size: 1rem;
+  /* 增加外发光，模拟电子屏幕感 */
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
+}
+
+.cmd-status { color: var(--eva-green); font-weight: 900; font-size: 0.75rem; padding: 1px 6px; border: 1px solid var(--eva-green); box-shadow: 0 0 5px var(--eva-green); }
 
 .command-line.ghost { opacity: 0.2 !important; filter: grayscale(1); }
 

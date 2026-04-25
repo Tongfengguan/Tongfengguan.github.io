@@ -4,6 +4,7 @@ import HeroSection from '../components/HeroSection.vue'
 import ProjectSection from '../components/ProjectSection.vue'
 import LinksSection from '../components/LinksSection.vue'
 import BackgroundSystem from '../components/BackgroundSystem.vue'
+import EntryGate from '../components/EntryGate.vue'
 
 // ================= 配置区 =================
 const cfHandle = 'tfgkk'
@@ -32,6 +33,14 @@ const bookmarks = ref(defaultBookmarks)
 
 const myProjects = [
   {
+    title: '绫地宁宁 AI 助手', subtitle: 'NingNing-Bot',
+    desc: '基于 Python + DeepSeek-V3 + NapCatQQ 构建的高度还原向 AI 机器人，具备 RAG 超长记忆、知识库搜索及视觉识图能力。',
+    tech: ['Python 3.13', 'DeepSeek-V3', 'FastAPI', 'RAG', 'SQLite'],
+    features: ['灵魂级人设还原', 'RAG 超长长效记忆', '语义知识库搜索', '魔女之眼视觉识图', 'B 站热门实时联动', '开发者可视化仪表盘'],
+    image: 'https://images.unsplash.com/photo-1531746790731-6c087fdec69a?q=80&w=1000&auto=format&fit=crop',
+    github: 'https://github.com/Tongfengguan/LingDiNingNing_talkbot'
+  },
+  {
     title: '智慧三农平台', subtitle: 'FarmerPlatform',
     desc: '全栈式“智慧三农”管理与服务平台，为农户和消费者提供政策资讯及业务管理方案。',
     tech: ['Java 21', 'Spring Boot', 'Vue 3', 'DeepSeek-V3'],
@@ -54,14 +63,6 @@ const myProjects = [
     features: ['发布寻物/招领', '物品列表浏览', '申请认领', '管理端审核', '地图位置标注', '实时消息推送'],
     image: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1000&auto=format&fit=crop',
     github: 'https://github.com/tongfengguan/Campus-Lost-and-Found-System',
-  },
-  {
-    title: '绫地宁宁 AI 助手', subtitle: 'NingNing-Bot',
-    desc: '基于 Python + DeepSeek-V3 + NapCatQQ 构建的高度还原向 AI 机器人，具备 RAG 超长记忆、知识库搜索及视觉识图能力。',
-    tech: ['Python 3.13', 'DeepSeek-V3', 'FastAPI', 'RAG', 'SQLite'],
-    features: ['灵魂级人设还原', 'RAG 超长长效记忆', '语义知识库搜索', '魔女之眼视觉识图', 'B 站热门实时联动', '开发者可视化仪表盘'],
-    image: 'https://images.unsplash.com/photo-1531746790731-6c087fdec69a?q=80&w=1000&auto=format&fit=crop',
-    github: 'https://github.com/Tongfengguan/LingDiNingNing_talkbot'
   }
 ]
 
@@ -75,6 +76,9 @@ const socials = [
 type Theme = 'unit00' | 'unit01' | 'unit02'
 const currentTheme = ref<Theme>('unit01')
 const isMenuOpen = ref(false)
+
+// 闸门控制状态
+const isGateOpen = ref(false)
 
 const themes: { name: Theme; label: string; color: string }[] = [
   { name: 'unit00', label: '零号機 · PROTO', color: '#eab308' },
@@ -148,6 +152,11 @@ const goToSection = (index: number) => {
 }
 
 const handleWheel = (e: WheelEvent) => {
+  // 首次触发开门
+  if (!isGateOpen.value) {
+    if (e.deltaY > 10) isGateOpen.value = true
+    return
+  }
   if (isAnimating.value) return
   if (e.deltaY > 20) goToSection(currentIndex.value + 1)
   else if (e.deltaY < -20) goToSection(currentIndex.value - 1)
@@ -161,17 +170,29 @@ const handleTouchEnd = (e: TouchEvent) => {
   if (!touchEnd) return
   const touchEndY = touchEnd.clientY
   const deltaY = touchStartY - touchEndY
+
+  // 移动端开门触发
+  if (!isGateOpen.value) {
+    if (deltaY > 30) isGateOpen.value = true
+    return
+  }
+
   if (Math.abs(deltaY) > 50) {
     if (deltaY > 0) goToSection(currentIndex.value + 1)
     else goToSection(currentIndex.value - 1)
   }
 }
 
+const windowWidth = ref(window.innerWidth)
+const windowHeight = ref(window.innerHeight)
+const updateDimensions = () => {
+  windowWidth.value = window.innerWidth
+  windowHeight.value = window.innerHeight
+}
+
 const avatarStyle = computed((): CSSProperties => {
   const active = currentIndex.value > 0
   const scale = active ? 0.5 : 1.3
-  
-  // 核心修复：使用 left/top 进行绝对对齐，彻底消除“偏左”误差
   return {
     position: 'fixed',
     left: active ? '85px' : '50%',
@@ -179,7 +200,9 @@ const avatarStyle = computed((): CSSProperties => {
     transform: `translate(-50%, -50%) scale(${scale})`,
     transition: 'all 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)',
     zIndex: 2000,
-    willChange: 'transform'
+    willChange: 'transform',
+    // 闸门未开时隐藏头像，开启后显示
+    opacity: isGateOpen.value ? 1 : 0
   }
 })
 
@@ -189,8 +212,8 @@ onMounted(() => {
   window.addEventListener('wheel', handleWheel, { passive: false })
   window.addEventListener('touchstart', handleTouchStart, { passive: true })
   window.addEventListener('touchend', handleTouchEnd, { passive: true })
-  window.addEventListener('resize', () => {}) // 移除了不必要的动态变量，提高稳定性
-  window.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', () => {})
+  window.addEventListener('click', () => { if (!isGateOpen.value) isGateOpen.value = true; handleClickOutside })
 })
 
 onUnmounted(() => {
@@ -204,8 +227,12 @@ onUnmounted(() => {
 
 <template>
   <main class="page-viewport" :class="[currentTheme + '-theme']">
+    <!-- 绝密准入闸门：由 isGateOpen 变量独立控制 -->
+    <EntryGate :isOpen="isGateOpen" :theme="currentTheme" />
+
     <BackgroundSystem :currentIndex="currentIndex" :theme="currentTheme" />
-    <div class="eva-overlay" :class="{ 'scrolled-down': currentIndex > 0 }">
+    
+    <div class="eva-overlay" :class="{ 'scrolled-down': currentIndex > 0, 'gate-locked': !isGateOpen }">
       <div class="top-bar">
         <div class="magi-status">MAGI SYSTEM: <span class="blink">ONLINE</span></div>
         <div class="sync-rate">SYNC RATE: {{ currentTheme === 'unit01' ? '400%' : '100%' }}</div>
@@ -215,7 +242,9 @@ onUnmounted(() => {
         <div class="emergency-code">STATUS: {{ currentTheme === 'unit01' ? 'BERSERK' : 'NORMAL' }}</div>
       </div>
     </div>
-    <div class="theme-selector">
+
+    <!-- UI 元素在闸门锁定期间自动隐藏 -->
+    <div class="theme-selector" :style="{ opacity: isGateOpen ? 1 : 0, pointerEvents: isGateOpen ? 'auto' : 'none' }">
       <button class="theme-trigger" @click="isMenuOpen = !isMenuOpen" :aria-expanded="isMenuOpen">
         <div class="btn-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></div>
         <span class="trigger-label">UNIT SELECT</span>
@@ -223,71 +252,115 @@ onUnmounted(() => {
       </button>
       <transition name="menu-slide"><div v-if="isMenuOpen" class="theme-menu"><button v-for="t in themes" :key="t.name" class="menu-item" :class="{ 'active': currentTheme === t.name }" @click="setTheme(t.name)"><span class="item-dot" :style="{ background: t.color }"></span>{{ t.label }}</button></div></transition>
     </div>
+
     <div class="avatar-fixed-box" :style="avatarStyle">
       <div class="avatar-ring" role="button" aria-label="Change bio text" tabindex="0" @click="changeBio" @keydown.enter="changeBio">
         <img src="/avatar.png" alt="Avatar" /><div class="ring-glow-aura"></div>
       </div>
     </div>
+
+    <!-- 页面滚动容器：起始就是 HeroSection -->
     <div class="page-wrapper" :style="{ transform: `translate3d(0, -${currentIndex * 100}vh, 0)` }">
-      <HeroSection 
-        class="layout-section" 
-        :displayedBio="displayedBio" 
-        :cfRating="cfRating" 
-        :cfSolved="cfSolved" 
-        :cfRank="cfRank" 
-        :cfLoading="cfLoading" 
-        :cfHistory="cfHistory"
-        :theme="currentTheme"
-        :isVisible="currentIndex === 0" 
-        @scroll-down="goToSection(1)" 
-      />
-      <ProjectSection v-for="(project, index) in myProjects" :key="index" class="layout-section" :project="project" :index="index" :isVisible="currentIndex === index + 1" />
-      <LinksSection class="layout-section" :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1" />
+      <HeroSection class="layout-section" :displayedBio="displayedBio" :cfRating="cfRating" :cfSolved="cfSolved" :cfRank="cfRank" :cfLoading="cfLoading" :cfHistory="cfHistory" :theme="currentTheme" :isVisible="currentIndex === 0 && isGateOpen" @scroll-down="goToSection(1)" />
+      <ProjectSection v-for="(project, index) in myProjects" :key="index" class="layout-section" :project="project" :index="index" :isVisible="currentIndex === index + 1 && isGateOpen" />
+      <LinksSection class="layout-section" :bookmarks="bookmarks" :socials="socials" :isVisible="currentIndex === totalSections - 1 && isGateOpen" />
     </div>
-    <div class="side-nav" role="navigation" aria-label="Page sections">
+
+    <!-- 侧边导航：闸门开启前隐藏，且点数恢复为 6 个 -->
+    <div class="side-nav" :style="{ opacity: isGateOpen ? 1 : 0 }">
       <div v-for="i in totalSections" :key="i" class="nav-dot" role="button" :aria-label="`Go to section ${i}`" tabindex="0" :class="{ 'active': currentIndex === i-1 }" @click="goToSection(i-1)" @keydown.enter="goToSection(i-1)"></div>
     </div>
   </main>
 </template>
 
 <style scoped>
+/* 核心动画适配：内容在闸门开启瞬间轻微缩放淡入 */
+.page-wrapper { 
+  display: flex; flex-direction: column; height: 100vh; width: 100%; 
+  transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1), opacity 1s, filter 1s; 
+  will-change: transform;
+}
+
 .page-viewport { --bg: #ffffff; --text-main: #000; --text-mute: #333; --accent: #a855f7; --card-bg: #fff; --border: #000; --shadow: #000; --eva-orange: #f59e0b; --eva-green: #22c55e; --accent-text: #ffffff; --accent-rgb: 168, 85, 247; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: var(--bg); transition: background 0.5s; }
 .unit00-theme { --bg: #ffffff; --text-main: #1f2937; --text-mute: #6b7280; --accent: #eab308; --accent-rgb: 234, 179, 8; --card-bg: #f3f4f6; --border: #4b5563; --shadow: #eab308; --eva-orange: #eab308; --eva-green: #9ca3af; --accent-text: #000000; }
 .unit01-theme { --bg: #030303; --text-main: #ffffff; --text-mute: #666666; --accent: #9333ea; --accent-rgb: 147, 51, 234; --eva-green: #22c55e; --eva-orange: #f59e0b; --card-bg: #0f0f0f; --border: #ffffff; --shadow: #9333ea; --accent-text: #ffffff; }
 .unit02-theme { --bg: #050505; --text-main: #ffffff; --text-mute: #a1a1aa; --accent: #ef4444; --accent-rgb: 239, 68, 68; --eva-green: #ffffff; --eva-orange: #ef4444; --card-bg: #1a1a1a; --border: #ef4444; --shadow: #ffffff; --accent-text: #ffffff; }
 
-.theme-selector { position: fixed !important; top: 30px !important; right: 30px !important; z-index: 2500; }
-.theme-trigger { background: rgba(var(--accent-rgb), 0.2) !important; backdrop-filter: blur(12px); border: 3px solid var(--border); box-shadow: 4px 4px 0px var(--shadow); display: flex; align-items: center; gap: 12px; padding: 0 15px; height: 50px; cursor: pointer; transition: 0.2s; }
-.theme-trigger:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--shadow); }
-.trigger-label { font-weight: 950; font-size: 0.85rem; color: var(--text-main); letter-spacing: 1px; }
-.btn-inner svg { width: 22px; height: 22px; color: var(--accent); }
-.chevron { width: 14px; height: 14px; color: var(--accent); transition: 0.3s; }
+/* ================= 主题选择器：全息适配升级 ================= */
+.theme-selector { position: fixed !important; top: 30px !important; right: 30px !important; z-index: 2500; transition: opacity 0.5s, transform 0.3s; }
+
+.theme-trigger {
+  background: rgba(var(--accent-rgb), 0.15) !important; 
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 2px solid var(--accent); 
+  /* 核心：动态主题发光 */
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.3), inset 0 0 10px rgba(var(--accent-rgb), 0.1);
+  display: flex; align-items: center; gap: 12px; padding: 0 18px; height: 46px; 
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 零号机下的特殊加固 */
+.unit00-theme .theme-trigger {
+  background: rgba(234, 179, 8, 0.1) !important;
+  border-width: 3px;
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+}
+
+.theme-trigger:hover {
+  background: rgba(var(--accent-rgb), 0.3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(var(--accent-rgb), 0.4);
+}
+
+.theme-trigger:active { transform: translateY(0) scale(0.98); }
+
+.trigger-label { font-weight: 900; font-size: 0.75rem; color: var(--text-main); letter-spacing: 2px; }
+.btn-inner svg { width: 20px; height: 20px; color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+.chevron { width: 12px; height: 12px; color: var(--accent); transition: 0.3s; }
 .chevron.open { transform: rotate(180deg); }
-.theme-menu { position: absolute; top: 60px; right: 0; width: 200px; background: rgba(var(--card-bg-rgb, 15, 15, 15), 0.8); backdrop-filter: blur(15px); border: 3px solid var(--border); box-shadow: 8px 8px 0px var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-.unit00-theme .theme-menu { background: rgba(255, 255, 255, 0.85); }
-.unit01-theme .theme-menu { background: rgba(15, 15, 15, 0.85); }
-.unit02-theme .theme-menu { background: rgba(5, 5, 5, 0.85); }
-.menu-item { background: transparent; border: 2px solid transparent; padding: 12px 15px; display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem; color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left; }
-.menu-item:hover { background: rgba(var(--accent-rgb), 0.3); border-color: var(--border); }
-.menu-item.active { border-color: var(--border); background: rgba(var(--accent-rgb), 0.1); }
-.item-dot { width: 10px; height: 10px; border: 2px solid var(--border); }
+
+.theme-menu {
+  position: absolute; top: 55px; right: 0; width: 220px;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(20px);
+  border: 2px solid var(--accent);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(var(--accent-rgb), 0.2);
+  padding: 8px; display: flex; flex-direction: column; gap: 5px;
+}
+
+.unit00-theme .theme-menu { background: rgba(255, 255, 255, 0.9); }
+
+.menu-item {
+  background: transparent; border: 1px solid transparent; padding: 12px 15px;
+  display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 0.75rem;
+  color: var(--text-main); cursor: pointer; transition: 0.2s; text-align: left;
+}
+.menu-item:hover { 
+  background: rgba(var(--accent-rgb), 0.15); 
+  border-color: var(--accent);
+  padding-left: 20px; /* 悬停时的位移反馈 */
+}
+.menu-item.active { background: var(--accent); color: var(--accent-text) !important; }
+.item-dot { width: 8px; height: 8px; border: 1.5px solid currentColor; }
 
 /* 头像对齐修复 */
-.avatar-fixed-box { width: 180px; height: 180px; pointer-events: none; }
-.avatar-ring { width: 100%; height: 100%; border-radius: 50%; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
+.avatar-fixed-box { width: 200px; height: 200px; pointer-events: none; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+.avatar-ring { width: 140px; height: 140px; border-radius: 50%; position: relative; cursor: pointer; pointer-events: auto; transition: 0.3s; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
 .avatar-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: relative; z-index: 2; border: 4px solid var(--accent); box-sizing: border-box; }
 .ring-glow-aura { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent); opacity: 0.5; z-index: 1; animation: aura-pulse 2.5s infinite; box-sizing: border-box; }
 @keyframes aura-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
 
 .eva-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; transition: opacity 0.5s, transform 0.5s; }
 .eva-overlay.scrolled-down { opacity: 0.3; transform: scale(1.02); } 
+.eva-overlay.gate-locked { opacity: 0; } /* 闸门闭合时隐藏全局装饰条 */
+
 .top-bar, .bottom-bar { position: absolute; left: 0; right: 0; display: flex; justify-content: space-between; padding: 10px 30px; font-family: 'Courier New', monospace; font-weight: 900; font-size: 0.7rem; color: var(--eva-orange); background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); border-bottom: 2px solid var(--eva-orange); }
 .bottom-bar { bottom: 0; top: auto; border-bottom: 0; border-top: 2px solid var(--eva-orange); }
 .blink { animation: blink-eva 1s step-end infinite; color: var(--eva-green); }
 @keyframes blink-eva { 50% { opacity: 0; } }
-.page-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100%; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); will-change: transform; }
+
 .layout-section { flex-shrink: 0; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
-.side-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+.side-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; transition: opacity 0.5s; }
 .nav-dot { width: 14px; height: 14px; border: 2px solid var(--accent); cursor: pointer; transition: 0.3s; opacity: 0.4; transform: rotate(45deg); }
 .nav-dot.active { background: var(--accent); opacity: 1; transform: rotate(45deg) scale(1.2); }
 @media (max-width: 900px) { .avatar-fixed-box { width: 120px; height: 120px; } .avatar-ring { width: 100%; height: 100%; } .eva-overlay { display: none; } .theme-selector { top: 20px !important; right: 20px !important; } .side-nav { right: 15px; } }

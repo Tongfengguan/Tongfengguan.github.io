@@ -83,20 +83,22 @@ defineProps<Props>()
 .socials { display: flex; justify-content: flex-start; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
 
 .social-tag { 
-  padding: 10px 20px; 
+  padding: 12px 25px; 
   background: var(--accent); 
   text-decoration: none; 
-  color: #000; 
+  color: var(--accent-text); 
   border: 3px solid var(--border); 
   font-weight: 900;
   box-shadow: 4px 4px 0px var(--border);
-  transition: 0.2s;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   font-size: 0.9rem;
 }
 
 .social-tag:hover { 
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--border);
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0px var(--border);
+  background: var(--text-main);
+  color: var(--bg);
 }
 
 .copy-box {
