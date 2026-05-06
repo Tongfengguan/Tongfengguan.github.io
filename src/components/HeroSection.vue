@@ -9,19 +9,20 @@ defineProps<Props>()
 
 <template>
   <section class="hero">
+    <div class="hero-prompt mono">$ whoami</div>
     <div class="hero-main">
       <h1 class="hero-title">
-        TFGKK
+        TFGKK<span class="cursor"></span>
       </h1>
       <div class="hero-bio">
-        <p class="bio-text">{{ displayedBio }}</p>
+        <p class="bio-text">// {{ displayedBio }}</p>
       </div>
     </div>
     
     <div class="hero-footer">
       <div class="location">
         <span class="mono">LOCATION</span>
-        <span class="location-val">CHENGDU, CN</span>
+        <span class="location-val">FUZHOU, CN</span>
       </div>
       <div class="scroll-indicator">
         <span class="mono">SCROLL TO EXPLORE</span>
@@ -39,10 +40,16 @@ defineProps<Props>()
   position: relative;
 }
 
+.hero-prompt {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
 .hero-main {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .hero-title {

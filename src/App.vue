@@ -6,15 +6,16 @@
 
 <style>
 :root {
-  --bg: #09090b;
-  --fg: #ffffff;
-  --muted: #a1a1aa;
-  --accent: #ffffff;
+  --bg: #0c0c0c;
+  --fg: #d0d0cc;
+  --muted: #555555;
+  --accent: #7ddfca;
+  --accent2: #f0a050;
   --font-sans: 'Archivo', sans-serif;
-  --font-mono: 'IBM+Plex+Mono', monospace;
+  --font-mono: 'IBM Plex Mono', monospace;
   --font-display: 'Archivo', sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --section-pad: clamp(4rem, 10vw, 10rem);
+  --section-pad: clamp(4rem, 10vw, 8rem);
 }
 
 * {
@@ -29,7 +30,23 @@ body {
   color: var(--fg);
   font-family: var(--font-sans);
   overflow-x: hidden;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+/* Scanline Overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.1) 2px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
 }
 
 h1, h2, h3 {
@@ -37,12 +54,13 @@ h1, h2, h3 {
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.9;
+  color: #f0f0ee;
 }
 
 a {
   text-decoration: none;
   color: inherit;
-  transition: opacity 0.3s var(--ease);
+  transition: all 0.3s var(--ease);
 }
 
 button {
@@ -59,6 +77,20 @@ button {
   letter-spacing: 0.1em;
 }
 
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 1.2em;
+  background: var(--accent);
+  vertical-align: middle;
+  margin-left: 4px;
+  animation: blink 1.1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
@@ -67,7 +99,7 @@ button {
   background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #1e1e1e;
 }
 </style>
 

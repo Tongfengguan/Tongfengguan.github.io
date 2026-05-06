@@ -24,9 +24,11 @@ defineProps<Props>()
       <div class="project-content">
         <h2 class="project-title">{{ project.title }}</h2>
         <div class="project-details">
-          <p class="project-desc">{{ project.desc }}</p>
+          <p class="project-desc">// {{ project.desc }}</p>
           <div class="project-tech">
-            <span v-for="t in project.tech" :key="t" class="mono tech-tag">{{ t }}</span>
+            <span v-for="t in project.tech" :key="t" class="tech-tag">
+              <span class="mono"># {{ t }}</span>
+            </span>
           </div>
         </div>
       </div>

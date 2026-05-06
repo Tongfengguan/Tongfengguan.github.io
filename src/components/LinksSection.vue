@@ -29,7 +29,7 @@ defineProps<Props>()
         <ul class="link-list">
           <li v-for="link in cat.links" :key="link.title">
             <a :href="link.url" target="_blank" class="link-anchor">
-              <span class="link-title">{{ link.title }}</span>
+              <span class="link-title"><span class="mono" style="color:var(--accent2); margin-right: 0.5rem;">[link]</span>{{ link.title }}</span>
               <span class="mono link-meta">{{ link.desc }}</span>
             </a>
           </li>

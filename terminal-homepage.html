@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Li Wei — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0c0c;
+    --bg2: #111;
+    --border: #1e1e1e;
+    --text: #d0d0cc;
+    --muted: #555;
+    --accent: #7ddfca;
+    --accent2: #f0a050;
+    --green: #6fcf7a;
+    --red: #f07070;
+  }
+
+  html { font-size: 14px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 0;
+    cursor: default;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.06) 2px,
+      rgba(0,0,0,0.06) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 40px 80px;
+    animation: fadein 0.6s ease both;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+  .topbar-left { color: var(--muted); font-size: 12px; }
+  .topbar-left span { color: var(--accent); }
+  .topbar-right { color: var(--muted); font-size: 12px; }
+  .status-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    animation: pulse 2s ease infinite;
+    vertical-align: 1px;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Hero */
+  .hero { margin-bottom: 48px; }
+  .hero-prompt { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
+  .hero-prompt .cmd { color: var(--accent); }
+  .hero-name {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 500;
+    color: #f0f0ee;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .hero-role { color: var(--accent); font-size: 14px; margin-bottom: 28px; }
+  .hero-bio { color: #888; font-size: 13px; line-height: 2; max-width: 480px; }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 36px 0;
+  }
+
+  /* Info rows */
+  .info-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 12px;
+    font-size: 13px;
+    animation: fadein 0.5s ease both;
+  }
+  .info-row:nth-child(1) { animation-delay: 0.05s; }
+  .info-row:nth-child(2) { animation-delay: 0.1s; }
+  .info-row:nth-child(3) { animation-delay: 0.15s; }
+  .info-row:nth-child(4) { animation-delay: 0.2s; }
+  .info-key { color: var(--muted); width: 120px; flex-shrink: 0; }
+  .info-val { color: var(--text); }
+  .info-val a { color: var(--accent); text-decoration: none; }
+  .info-val a:hover { text-decoration: underline; }
+  .tag {
+    display: inline-block;
+    background: #1a1a1a;
+    border: 1px solid var(--border);
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-right: 4px;
+    color: #aaa;
+  }
+  .badge-open {
+    color: var(--green);
+    font-size: 12px;
+  }
+  .badge-open::before { content: '● '; font-size: 8px; }
+
+  /* Section header */
+  .section-header {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .section-header::before { content: '# '; color: var(--accent2); }
+
+  /* Projects */
+  .projects { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 48px; }
+  @media (max-width: 520px) { .projects { grid-template-columns: 1fr; } }
+
+  .proj {
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+    border-radius: 4px;
+    background: var(--bg2);
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+  .proj:hover {
+    border-color: #333;
+    background: #161616;
+  }
+  .proj-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .proj-name { color: var(--accent); font-size: 14px; font-weight: 500; }
+  .proj-lang { font-size: 11px; color: var(--muted); }
+  .proj-desc { color: #666; font-size: 12px; line-height: 1.8; }
+  .proj-meta { margin-top: 12px; display: flex; gap: 14px; font-size: 11px; color: var(--muted); }
+  .proj-star::before { content: '★ '; color: var(--accent2); }
+
+  /* Writing */
+  .writings { margin-bottom: 48px; }
+  .writing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    transition: color 0.15s;
+    cursor: pointer;
+  }
+  .writing-item:hover .writing-title { color: var(--accent); }
+  .writing-title { color: #bbb; }
+  .writing-date { color: var(--muted); font-size: 11px; white-space: nowrap; margin-left: 20px; }
+
+  /* Contact */
+  .contact { margin-bottom: 48px; }
+  .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 520px) { .contact-grid { grid-template-columns: 1fr 1fr; } }
+
+  .contact-item {
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 4px;
+    background: var(--bg2);
+    font-size: 12px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+  }
+  .contact-item:hover { border-color: #2e2e2e; }
+  .contact-platform { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+  .contact-handle { color: var(--accent); }
+
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Cursor blink */
+  .cursor {
+    display: inline-block;
+    width: 9px; height: 15px;
+    background: var(--accent);
+    vertical-align: -2px;
+    animation: blink 1.1s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="topbar">
+    <div class="topbar-left">visitor@<span>liwei.dev</span>:~$</div>
+    <div class="topbar-right"><span class="status-dot"></span>open to work</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-prompt">$ whoami<span class="cursor"></span></div>
+    <h1 class="hero-name">Li Wei</h1>
+    <div class="hero-role">// 全栈工程师 · 开源贡献者</div>
+    <p class="hero-bio">
+      构建高性能、可维护的系统。热衷于数据库内核与开发者工具。<br>
+      相信好的工程是一种隐形的艺术。
+    </p>
+  </div>
+
+  <hr class="divider">
+
+  <div style="margin-bottom: 40px;">
+    <div class="info-row">
+      <span class="info-key">location</span>
+      <span class="info-val">上海, 中国 🇨🇳</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">stack</span>
+      <span class="info-val">
+        <span class="tag">TypeScript</span>
+        <span class="tag">Go</span>
+        <span class="tag">Rust</span>
+        <span class="tag">PostgreSQL</span>
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">github</span>
+      <span class="info-val"><a href="#">@liwei_dev</a></span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">status</span>
+      <span class="info-val"><span class="badge-open">open to work</span></span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-header">projects</div>
+  <div class="projects">
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name">inkdb</div>
+        <div class="proj-lang">Rust</div>
+      </div>
+      <div class="proj-desc">嵌入式文档数据库，零依赖，单文件部署，支持事务与索引。</div>
+      <div class="proj-meta">
+        <span class="proj-star">1.2k</span>
+        <span>MIT License</span>
+      </div>
+    </div>
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name">patchwork</div>
+        <div class="proj-lang">Go</div>
+      </div>
+      <div class="proj-desc">轻量级 CI/CD 工具链，为小型团队设计，配置即代码。</div>
+      <div class="proj-meta">
+        <span class="proj-star">438</span>
+        <span>Apache 2.0</span>
+      </div>
+    </div>
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name">foxtype</div>
+        <div class="proj-lang">TypeScript</div>
+      </div>
+      <div class="proj-desc">运行时类型验证库，零运行时开销，完整 TypeScript 推断支持。</div>
+      <div class="proj-meta">
+        <span class="proj-star">276</span>
+        <span>MIT License</span>
+      </div>
+    </div>
+    <div class="proj">
+      <div class="proj-top">
+        <div class="proj-name">shellcraft</div>
+        <div class="proj-lang">Python</div>
+      </div>
+      <div class="proj-desc">终端 UI 组件库，声明式 API，支持响应式布局与键盘导航。</div>
+      <div class="proj-meta">
+        <span class="proj-star">189</span>
+        <span>MIT License</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">writing</div>
+  <div class="writings">
+    <div class="writing-item">
+      <span class="writing-title">为什么我从 ORM 切换回了原生 SQL</span>
+      <span class="writing-date">2026-03</span>
+    </div>
+    <div class="writing-item">
+      <span class="writing-title">Rust 中的零成本抽象实践笔记</span>
+      <span class="writing-date">2025-11</span>
+    </div>
+    <div class="writing-item">
+      <span class="writing-title">构建开发者工具的五条原则</span>
+      <span class="writing-date">2025-08</span>
+    </div>
+    <div class="writing-item">
+      <span class="writing-title">一个数据库引擎的诞生 — inkdb 开发日志</span>
+      <span class="writing-date">2025-05</span>
+    </div>
+  </div>
+
+  <div class="section-header">contact</div>
+  <div class="contact">
+    <div class="contact-grid">
+      <a class="contact-item" href="mailto:hi@liwei.dev">
+        <div class="contact-platform">email</div>
+        <div class="contact-handle">hi@liwei.dev</div>
+      </a>
+      <a class="contact-item" href="#">
+        <div class="contact-platform">github</div>
+        <div class="contact-handle">@liwei_dev</div>
+      </a>
+      <a class="contact-item" href="#">
+        <div class="contact-platform">twitter / x</div>
+        <div class="contact-handle">@liwei_x</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>© 2026 Li Wei</span>
+    <span>built with vim + caffeine</span>
+  </div>
+
+</div>
+
+</body>
+</html>

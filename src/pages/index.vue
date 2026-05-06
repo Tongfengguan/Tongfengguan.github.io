@@ -107,10 +107,11 @@ onMounted(() => {
 <template>
   <main class="page">
     <header class="nav">
-      <div class="nav-logo">TFGKK</div>
+      <div class="nav-logo">visitor@<span>tfgkk.io</span>:~$</div>
       <div class="nav-status">
+        <span class="status-dot"></span>
         <span class="mono">STATUS: ACTIVE</span>
-        <span class="mono">CF: {{ cfRating }} ({{ cfRank }})</span>
+        <span class="mono">CF: {{ cfRating }}</span>
       </div>
     </header>
 
@@ -121,7 +122,7 @@ onMounted(() => {
       />
       
       <section class="section-label">
-        <span class="mono">SELECTED PROJECTS</span>
+        <span class="mono prompt">$ ls selected_projects/</span>
       </section>
 
       <div class="projects-list">
@@ -133,6 +134,10 @@ onMounted(() => {
         />
       </div>
       
+      <section class="section-label">
+        <span class="mono prompt">$ cat resources.md</span>
+      </section>
+
       <LinksSection 
         :bookmarks="bookmarks" 
         :socials="socials" 
@@ -168,15 +173,31 @@ onMounted(() => {
   mix-blend-mode: difference;
 }
 
-.nav-logo {
-  font-weight: 900;
-  font-size: 1.5rem;
-  letter-spacing: -0.05em;
+.nav-logo span {
+  color: var(--accent);
 }
 
-.nav-status {
-  display: flex;
-  gap: 2rem;
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #6fcf7a;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.prompt {
+  color: var(--muted);
+}
+
+.prompt::before {
+  content: '';
 }
 
 .content {
