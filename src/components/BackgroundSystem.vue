@@ -50,9 +50,15 @@ onUnmounted(() => {
 
     <!-- 六边形网格层 -->
     <div class="honeycomb-overlay" :style="{ backgroundImage: honeycombSvg }"></div>
-    
+
     <!-- 装饰性 HUD 数据层 -->
-    <div class="data-layer" :style="{ color: themeColors.line, transform: `translate3d(${mouseX * -0.5}px, ${mouseY * -0.5}px, 0)` }">
+    <div
+      class="data-layer"
+      :style="{
+        color: themeColors.line,
+        transform: `translate3d(${mouseX * -0.5}px, ${mouseY * -0.5}px, 0)`,
+      }"
+    >
       <div class="coord-cross top-left">+</div>
       <div class="coord-cross top-right">+</div>
       <div class="coord-cross bottom-left">+</div>
@@ -61,75 +67,187 @@ onUnmounted(() => {
     </div>
 
     <!-- 背景机体编号水印 -->
-    <div class="giant-label-layer" :style="{ color: themeColors.line, transform: `translate3d(${mouseX * -0.2}px, ${mouseY * -0.2}px, 0)` }">
+    <div
+      class="giant-label-layer"
+      :style="{
+        color: themeColors.line,
+        transform: `translate3d(${mouseX * -0.2}px, ${mouseY * -0.2}px, 0)`,
+      }"
+    >
       <div class="giant-text">{{ props.theme.toUpperCase() }}</div>
     </div>
 
     <!-- AT Field 碎片阵列层 -->
     <div class="float-layer" :style="{ transform: `translate3d(${mouseX}px, ${mouseY}px, 0)` }">
-      <div v-for="i in 15" :key="i" class="at-fragment"
-        :style="{ 
-          top: `${Math.floor((i-1) / 5) * 25 + 10}%`, 
-          left: `${((i-1) % 5) * 20 + ((Math.floor((i-1)/5) % 2) * 10)}%`,
+      <div
+        v-for="i in 15"
+        :key="i"
+        class="at-fragment"
+        :style="{
+          top: `${Math.floor((i - 1) / 5) * 25 + 10}%`,
+          left: `${((i - 1) % 5) * 20 + (Math.floor((i - 1) / 5) % 2) * 10}%`,
           '--rot': `${props.currentIndex * 30 + i * 10}deg`,
           '--delay': `${-(i * 1.5)}s`,
           '--color': themeColors.hex,
-          '--scale': `${0.4 + (i % 3) * 0.15}`
-        }">
+          '--scale': `${0.4 + (i % 3) * 0.15}`,
+        }"
+      >
         <div class="perfect-hex"></div>
       </div>
     </div>
 
     <!-- 动态扫描线：增强电子干扰感 -->
-    <div class="scan-line" :style="{ background: `linear-gradient(to bottom, transparent, ${themeColors.hex} 50%, transparent)` }"></div>
+    <div
+      class="scan-line"
+      :style="{
+        background: `linear-gradient(to bottom, transparent, ${themeColors.hex} 50%, transparent)`,
+      }"
+    ></div>
   </div>
 </template>
 
 <style scoped>
-.dynamic-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; transition: background 0.8s ease; pointer-events: none; }
-
-.vignette-overlay {
-  position: absolute; inset: 0;
-  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.3) 100%);
-  z-index: 1; pointer-events: none; opacity: 0.6;
+.dynamic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  transition: background 0.8s ease;
+  pointer-events: none;
 }
 
-.honeycomb-overlay { position: absolute; inset: 0; background-size: 56px 100px; transition: 0.5s; opacity: 1; z-index: 0; }
+.vignette-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.3) 100%);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.6;
+}
 
-.data-layer { position: absolute; inset: 40px; font-family: 'Share Tech Mono', monospace; opacity: 0.15; z-index: 5; transition: color 0.8s; }
-.coord-cross { position: absolute; font-size: 20px; font-weight: 900; }
-.top-left { top: 0; left: 0; } .top-right { top: 0; right: 0; }
-.bottom-left { bottom: 0; left: 0; } .bottom-right { bottom: 0; right: 0; }
-.hex-stream { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; white-space: nowrap; letter-spacing: 2px; }
+.honeycomb-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: 56px 100px;
+  transition: 0.5s;
+  opacity: 1;
+  z-index: 0;
+}
 
-.giant-label-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.08; transition: color 0.8s; }
-.giant-text { font-family: 'Arial Black', sans-serif; font-size: 35vw; font-weight: 900; letter-spacing: -2vw; user-select: none; }
+.data-layer {
+  position: absolute;
+  inset: 40px;
+  font-family: 'Share Tech Mono', monospace;
+  opacity: 0.15;
+  z-index: 5;
+  transition: color 0.8s;
+}
+.coord-cross {
+  position: absolute;
+  font-size: 20px;
+  font-weight: 900;
+}
+.top-left {
+  top: 0;
+  left: 0;
+}
+.top-right {
+  top: 0;
+  right: 0;
+}
+.bottom-left {
+  bottom: 0;
+  left: 0;
+}
+.bottom-right {
+  bottom: 0;
+  right: 0;
+}
+.hex-stream {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  letter-spacing: 2px;
+}
 
-.float-layer { position: absolute; inset: 0; transition: transform 0.2s ease-out; z-index: 10; }
-.at-fragment { position: absolute; transform: rotate(var(--rot)) scale(var(--scale)); opacity: 0.15; animation: float-at 10s infinite ease-in-out var(--delay); }
+.giant-label-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+  opacity: 0.08;
+  transition: color 0.8s;
+}
+.giant-text {
+  font-family: 'Arial Black', sans-serif;
+  font-size: 35vw;
+  font-weight: 900;
+  letter-spacing: -2vw;
+  user-select: none;
+}
+
+.float-layer {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.2s ease-out;
+  z-index: 10;
+}
+.at-fragment {
+  position: absolute;
+  transform: rotate(var(--rot)) scale(var(--scale));
+  opacity: 0.15;
+  animation: float-at 10s infinite ease-in-out var(--delay);
+}
 
 .perfect-hex {
-  width: 80px; height: 90px;
+  width: 80px;
+  height: 90px;
   background: var(--color);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   transition: background 0.8s ease;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .perfect-hex::after {
-  content: ''; width: 88%; height: 88%;
+  content: '';
+  width: 88%;
+  height: 88%;
   background: rgba(10, 10, 10, 0.9);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 @keyframes float-at {
-  0%, 100% { transform: translate(0, 0) rotate(var(--rot)) scale(var(--scale)); }
-  50% { transform: translate(15px, -15px) rotate(calc(var(--rot) + 8deg)); }
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(var(--rot)) scale(var(--scale));
+  }
+  50% {
+    transform: translate(15px, -15px) rotate(calc(var(--rot) + 8deg));
+  }
 }
 
-.scan-line { 
-  position: absolute; inset: 0; height: 12px; z-index: 20;
-  opacity: 0.08; mix-blend-mode: overlay;
-  animation: scan 10s linear infinite; transition: 0.8s; 
+.scan-line {
+  position: absolute;
+  inset: 0;
+  height: 12px;
+  z-index: 20;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  animation: scan 10s linear infinite;
+  transition: 0.8s;
 }
-@keyframes scan { from { transform: translateY(-100vh); } to { transform: translateY(100vh); } }
+@keyframes scan {
+  from {
+    transform: translateY(-100vh);
+  }
+  to {
+    transform: translateY(100vh);
+  }
+}
 </style>
