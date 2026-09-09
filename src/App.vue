@@ -1,105 +1,119 @@
-<script setup lang="ts"></script>
-
 <template>
   <router-view />
 </template>
 
 <style>
 :root {
-  --bg: #0c0c0c;
-  --fg: #d0d0cc;
-  --muted: #555555;
-  --accent: #7ddfca;
-  --accent2: #f0a050;
-  --font-sans: 'Archivo', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-  --font-display: 'Archivo', sans-serif;
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --section-pad: clamp(4rem, 10vw, 8rem);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  color-scheme: dark;
+  --bg: #101316;
+  --surface: #171c20;
+  --ink: #edf1f3;
+  --muted: #969fa8;
+  --line: #2b333a;
+  --accent: #8cddd2;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
-
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+}
 body {
-  background-color: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
-  overflow-x: hidden;
-  line-height: 1.6;
+  min-width: 320px;
 }
-
-/* Scanline Overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.1) 2px,
-    rgba(0, 0, 0, 0.1) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
-
-h1, h2, h3 {
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 0.9;
-  color: #f0f0ee;
-}
-
 a {
-  text-decoration: none;
   color: inherit;
-  transition: all 0.3s var(--ease);
+  text-decoration: none;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
 }
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
+a:hover {
+  color: var(--accent);
 }
-
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+  border-radius: 2px;
+}
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
 .mono {
   font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
 }
-
-.cursor {
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+}
+.section-heading::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.section-heading span {
+  color: var(--accent);
+  margin-right: 0.7rem;
+}
+.arrow {
   display: inline-block;
-  width: 10px;
-  height: 1.2em;
-  background: var(--accent);
-  vertical-align: middle;
-  margin-left: 4px;
-  animation: blink 1.1s step-end infinite;
+  transition: transform 180ms var(--ease);
 }
-
-@keyframes blink {
-  50% { opacity: 0; }
+a:hover .arrow,
+a:focus-visible .arrow {
+  transform: translate(3px, -3px);
 }
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
+[data-reveal] {
+  transition:
+    opacity 440ms var(--ease),
+    transform 440ms var(--ease);
 }
-::-webkit-scrollbar-track {
-  background: var(--bg);
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(16px);
 }
-::-webkit-scrollbar-thumb {
-  background: #1e1e1e;
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .reveal-pending {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>
-

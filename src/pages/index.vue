@@ -1,234 +1,154 @@
-<script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
 import HeroSection from '../components/HeroSection.vue'
 import ProjectSection from '../components/ProjectSection.vue'
 import LinksSection from '../components/LinksSection.vue'
+import { projects, linkGroups } from '../data/portfolio'
 
-// ================= Data Configuration =================
-const cfHandle = 'tfgkk'
-const bios = ['Creative Developer / Algorithm Enthusiast', 'Building robust systems with clean code', 'Passionate about XCPC and Open Source', 'Turning complex problems into elegant solutions']
-
-const bookmarks = ref([
-  {
-    category: 'Intelligence',
-    links: [
-      { title: 'Claude', desc: 'Anthropic AI', url: 'https://claude.ai/' },
-      { title: 'Gemini', desc: 'Google AI', url: 'https://gemini.google.com/' },
-      { title: 'ChatGPT', desc: 'OpenAI', url: 'https://chat.openai.com/' }
-    ]
-  },
-  {
-    category: 'Competitive',
-    links: [
-      { title: 'Codeforces', desc: 'Global Platform', url: 'https://codeforces.com/' },
-      { title: 'AtCoder', desc: 'High Quality', url: 'https://atcoder.jp/' },
-      { title: 'Nowcoder', desc: '牛客竞赛', url: 'https://ac.nowcoder.com/' }
-    ]
-  }
-])
-
-const myProjects = [
-  {
-    title: 'NingNing AI', subtitle: 'REPLICA AI ASSISTANT',
-    desc: 'Advanced AI bot based on DeepSeek-V3 with RAG memory and vision capabilities.',
-    tech: ['Python', 'DeepSeek-V3', 'RAG', 'FastAPI'],
-    features: ['Long-term Memory', 'Semantic Search', 'Visual Recognition'],
-    image: 'https://images.unsplash.com/photo-1531746790731-6c087fdec69a?q=80&w=1000&auto=format&fit=crop',
-    github: 'https://github.com/Tongfengguan/LingDiNingNing_talkbot'
-  },
-  {
-    title: 'Farmer Plat', subtitle: 'SMART AGRICULTURE',
-    desc: 'Full-stack platform providing policy information and management for farmers.',
-    tech: ['Java 21', 'Spring Boot', 'Vue 3'],
-    features: ['AI Assistant', 'Modern Architecture', 'Data Visualization'],
-    image: 'https://images.unsplash.com/photo-1451187580459-434902bd0c0e?q=80&w=1000&auto=format&fit=crop',
-    github: 'https://github.com/tongfengguan/FarmerPlatform'
-  },
-  {
-    title: 'Comp Manager', subtitle: 'CONTEST SYSTEM',
-    desc: 'Modern full-stack competition management platform with secure registration.',
-    tech: ['Spring Boot 3', 'Vue 3', 'MySQL'],
-    features: ['Automated Ops', 'Security First', 'Async Export'],
-    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1000&auto=format&fit=crop',
-    github: 'https://github.com/tongfengguan/SchoolCompetitionWeb'
-  }
-]
-
-const socials = [
-  { name: 'Github', url: 'https://github.com/tongfengguan' },
-  { name: 'Email', url: 'mailto:1316187067@qq.com' }
-]
-
-// ================= UI Logic =================
-const displayedBio = ref('')
-let currentTimer: any = null
-const typeWriter = (text: string) => {
-  if (currentTimer) clearTimeout(currentTimer)
-  let index = 0; displayedBio.value = ''
-  const type = () => {
-    if (index < text.length) {
-      displayedBio.value += text.charAt(index)
-      index++
-      currentTimer = setTimeout(type, 50)
-    }
-  }
-  type()
-}
-
-const cfRating = ref('--'), cfSolved = ref('--'), cfRank = ref('Unrated'), cfLoading = ref(true)
-const cfHistory = ref<number[]>([])
-
-const fetchCFData = async () => {
-  try {
-    const [info, status, rating] = await Promise.all([
-      fetch(`https://codeforces.com/api/user.info?handles=${cfHandle}`).then(r => r.json()),
-      fetch(`https://codeforces.com/api/user.status?handle=${cfHandle}`).then(r => r.json()),
-      fetch(`https://codeforces.com/api/user.rating?handle=${cfHandle}`).then(r => r.json())
-    ])
-    if (info.status === 'OK') {
-      cfRating.value = info.result[0].rating || 0
-      cfRank.value = info.result[0].rank || 'Unrated'
-    }
-    if (status.status === 'OK') {
-      cfSolved.value = new Set(status.result.filter((s: any) => s.verdict === 'OK').map((s: any) => `${s.problem.contestId}${s.problem.index}`)).size.toString()
-    }
-    if (rating.status === 'OK') {
-      cfHistory.value = rating.result.slice(-20).map((r: any) => r.newRating)
-    }
-  } catch (e) { console.error(e) } finally { cfLoading.value = false }
-}
+const page = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | undefined
 
 onMounted(() => {
-  if (bios[0]) typeWriter(bios[0])
-  fetchCFData()
+  if (
+    matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    !('IntersectionObserver' in window)
+  ) {
+    return
+  }
+
+  observer = new IntersectionObserver(
+    entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        entry.target.classList.remove('reveal-pending')
+        observer?.unobserve(entry.target)
+      }
+    },
+    { threshold: 0.08 }
+  )
+
+  page.value?.querySelectorAll<HTMLElement>('[data-reveal]').forEach(element => {
+    if (element.getBoundingClientRect().top < window.innerHeight) return
+    element.classList.add('reveal-pending')
+    observer?.observe(element)
+  })
 })
+
+onUnmounted(() => observer?.disconnect())
 </script>
 
 <template>
-  <main class="page">
-    <header class="nav">
-      <div class="nav-logo">visitor@<span>tfgkk.io</span>:~$</div>
-      <div class="nav-status">
-        <span class="status-dot"></span>
-        <span class="mono">STATUS: ACTIVE</span>
-        <span class="mono">CF: {{ cfRating }}</span>
-      </div>
+  <div id="top" ref="page" class="page-shell">
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-nav">
+      <a class="brand" href="#top" aria-label="TFGKK home">
+        <span class="brand-mark" aria-hidden="true">[t]</span> tfgkk
+      </a>
+      <nav aria-label="Page sections">
+        <a href="#work">Work</a>
+        <a href="#resources">Links</a>
+        <a href="mailto:1316187067@qq.com">Contact <span aria-hidden="true">↗</span></a>
+      </nav>
     </header>
 
-    <div class="content">
-      <HeroSection 
-        :displayedBio="displayedBio" 
-        :cfHistory="cfHistory"
-      />
-      
-      <section class="section-label">
-        <span class="mono prompt">$ ls selected_projects/</span>
-      </section>
-
-      <div class="projects-list">
-        <ProjectSection 
-          v-for="(project, index) in myProjects" 
-          :key="index" 
-          :project="project" 
-          :index="index" 
+    <main id="content" tabindex="-1">
+      <HeroSection :project-count="projects.length" />
+      <section id="work" class="section" aria-labelledby="work-title">
+        <div class="section-heading">
+          <h2 id="work-title" class="mono"><span>01 /</span> Selected work</h2>
+          <small class="mono">{{ String(projects.length).padStart(2, '0') }} projects</small>
+        </div>
+        <ProjectSection
+          v-for="(project, index) in projects"
+          :key="project.url"
+          :project="project"
+          :index="index"
         />
-      </div>
-      
-      <section class="section-label">
-        <span class="mono prompt">$ cat resources.md</span>
       </section>
+      <LinksSection :groups="linkGroups" />
+    </main>
 
-      <LinksSection 
-        :bookmarks="bookmarks" 
-        :socials="socials" 
-      />
-    </div>
-
-    <footer class="bottom-nav">
-      <div class="mono">© 2026 TFGKK</div>
-      <div class="social-mini">
-        <a v-for="s in socials" :key="s.name" :href="s.url" class="mono">{{ s.name }}</a>
-      </div>
+    <footer class="site-footer mono">
+      <span>© {{ new Date().getFullYear() }} TFGKK</span>
+      <a href="#top">Back to top ↑</a>
     </footer>
-  </main>
+  </div>
 </template>
 
 <style scoped>
-.page {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+.page-shell {
+  width: min(1040px, calc(100% - 4rem));
+  margin: 0 auto;
 }
-
-.nav {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  padding: 2rem;
+.site-nav,
+.site-nav nav,
+.site-footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  z-index: 100;
-  mix-blend-mode: difference;
+  justify-content: space-between;
 }
-
-.nav-logo span {
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 88px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.brand {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.brand-mark {
+  margin-right: 0.7rem;
   color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 400;
 }
-
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background-color: #6fcf7a;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-  animation: pulse 2s ease infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-.prompt {
+.site-nav nav {
+  gap: 1.8rem;
+  font-size: 0.8rem;
   color: var(--muted);
 }
-
-.prompt::before {
-  content: '';
+.site-nav a,
+.site-footer a {
+  padding-block: 0.75rem;
 }
-
-.content {
-  padding: 0 2rem;
+.section {
+  padding-top: 5rem;
 }
-
-.section-label {
-  padding: 4rem 0 2rem;
-  border-bottom: 1px solid #27272a;
+.site-footer {
+  margin-top: 6rem;
+  padding: 1.4rem 0 2rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
 }
-
-.projects-list {
-  display: flex;
-  flex-direction: column;
+.skip-link {
+  position: fixed;
+  top: -5rem;
+  z-index: 10;
+  padding: 0.7rem 1rem;
+  background: var(--surface);
 }
-
-.bottom-nav {
-  padding: 4rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid #27272a;
+.skip-link:focus {
+  top: 1rem;
 }
-
-.social-mini {
-  display: flex;
-  gap: 2rem;
-}
-
-@media (max-width: 768px) {
-  .nav-status { display: none; }
-  .nav { padding: 1.5rem; }
-  .content { padding: 0 1.5rem; }
+@media (max-width: 600px) {
+  .page-shell {
+    width: calc(100% - 2.5rem);
+  }
+  .site-nav {
+    min-height: 72px;
+  }
+  .site-nav nav {
+    gap: 1rem;
+  }
+  .brand-mark {
+    margin-right: 0.3rem;
+  }
+  .section {
+    padding-top: 3.5rem;
+  }
 }
 </style>

@@ -1,36 +1,28 @@
-<script lang="ts" setup>
-interface LinkItem {
-  title: string
-  desc: string
-  url: string
-}
+<script setup lang="ts">
+import type { LinkGroup } from '../data/portfolio'
 
-interface BookmarkCategory {
-  category: string
-  links: LinkItem[]
-}
-
-interface Props {
-  bookmarks: BookmarkCategory[]
-}
-
-defineProps<Props>()
+defineProps<{ groups: LinkGroup[] }>()
 </script>
 
 <template>
-  <section class="links-section">
-    <div class="links-header">
-      <span class="mono">RESOURCES & LINKS</span>
+  <section id="resources" class="links-section" aria-labelledby="links-title">
+    <div class="section-heading">
+      <h2 id="links-title" class="mono"><span>02 /</span> Elsewhere</h2>
     </div>
-    
     <div class="links-grid">
-      <div v-for="cat in bookmarks" :key="cat.category" class="category">
-        <h3 class="mono cat-title">{{ cat.category }}</h3>
-        <ul class="link-list">
-          <li v-for="link in cat.links" :key="link.title">
-            <a :href="link.url" target="_blank" class="link-anchor">
-              <span class="link-title"><span class="mono" style="color:var(--accent2); margin-right: 0.5rem;">[link]</span>{{ link.title }}</span>
-              <span class="mono link-meta">{{ link.desc }}</span>
+      <div v-for="group in groups" :key="group.title" class="link-group" data-reveal>
+        <h3 class="mono">{{ group.title }}</h3>
+        <ul>
+          <li v-for="link in group.links" :key="link.url">
+            <a
+              :href="link.url"
+              :target="link.url.startsWith('https:') ? '_blank' : undefined"
+              rel="noopener noreferrer"
+            >
+              <span
+                >{{ link.title }}<small>{{ link.detail }}</small></span
+              >
+              <span class="arrow" aria-hidden="true">↗</span>
             </a>
           </li>
         </ul>
@@ -41,54 +33,46 @@ defineProps<Props>()
 
 <style scoped>
 .links-section {
-  padding: 8rem 0;
+  padding-top: 5rem;
 }
-
-.links-header {
-  margin-bottom: 4rem;
-  opacity: 0.5;
-}
-
 .links-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3.5rem;
 }
-
-.cat-title {
+.link-group h3 {
   color: var(--muted);
-  margin-bottom: 2rem;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.6rem;
 }
-
-.link-list {
+ul {
   list-style: none;
-  display: flex;
-  flex-direction: column;
 }
-
-.link-anchor {
+.link-group a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid #27272a;
+  gap: 0.5rem;
+  min-height: 64px;
+  padding-block: 0.65rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
 }
-
-.link-anchor:hover {
-  border-color: var(--fg);
-}
-
-.link-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.link-meta {
+.link-group small {
+  display: block;
+  font-size: 0.7rem;
   color: var(--muted);
 }
-
-@media (max-width: 768px) {
-  .links-grid { grid-template-columns: 1fr; }
-  .link-title { font-size: 1.2rem; }
+.arrow {
+  color: var(--muted);
+}
+@media (max-width: 600px) {
+  .links-section {
+    padding-top: 3.5rem;
+  }
+  .links-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
 }
 </style>
