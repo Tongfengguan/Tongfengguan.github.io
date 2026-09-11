@@ -7,7 +7,7 @@ defineProps<{ groups: LinkGroup[] }>()
 <template>
   <section id="resources" class="links-section" aria-labelledby="links-title">
     <div class="section-heading">
-      <h2 id="links-title" class="mono"><span>02 /</span> Elsewhere</h2>
+      <h2 id="links-title" class="mono"><span>03 /</span> Elsewhere</h2>
     </div>
     <div class="links-grid">
       <div v-for="group in groups" :key="group.title" class="link-group" data-reveal>

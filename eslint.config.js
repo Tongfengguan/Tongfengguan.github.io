@@ -5,7 +5,7 @@ import prettier from '@vue/eslint-config-prettier'
 export default [
   ...typescript(),
   ...vue.configs['flat/recommended'],
-  prettier(),
+  prettier,
   {
     files: ['**/*.vue', '**/*.ts', '**/*.tsx'],
     rules: {
@@ -14,13 +14,6 @@ export default [
     },
   },
   {
-    ignores: [
-      'dist/**',
-      'docs/**',
-      'node_modules/**',
-      '*.config.js',
-      '*.config.ts',
-      'env.d.ts',
-    ],
+    ignores: ['dist/**', 'docs/**', 'node_modules/**', '*.config.js', '*.config.ts', 'env.d.ts'],
   },
 ]

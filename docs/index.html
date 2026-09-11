@@ -3,17 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="theme-color" content="#101316" />
+    <meta id="theme-color" name="theme-color" content="#f4f1e9" />
     <meta
       name="description"
-      content="TFGKK — selected projects in algorithms, AI, and full-stack development."
+      content="TFGKK — personal projects, development notes, and useful browser tools."
     />
+    <script>
+      ;(() => {
+        try {
+          const saved = localStorage.getItem('tfgkk:theme')
+          document.documentElement.dataset.theme =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+        } catch {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TFGKK</title>
-    <script type="module" crossorigin src="/assets/index-eCLsbKk8.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DDGCCBa-.css">
+    <script type="module" crossorigin src="/assets/index-C61E4kCn.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DZzVyOZn.css">
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app"></div>
   </body>
 </html>
